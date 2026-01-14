@@ -6,4 +6,4 @@
 export { default as HomeScreen } from './HomeScreen';
 export { default as EnergyScreen } from './EnergyScreen';
 export { default as WalletScreen } from './WalletScreen';
-export { default as ProfileScreen } from './ProfileScreen';
+export { default as ProfileScreen } from './ProfileScreen';export { default as DeviceManagementScreen } from './DeviceManagementScreen';

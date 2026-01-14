@@ -45,3 +45,6 @@ export {
   getStatusColor,
   isCredit,
 } from './walletStore';
+
+// Device Store
+export { useDeviceStore } from './deviceStore';

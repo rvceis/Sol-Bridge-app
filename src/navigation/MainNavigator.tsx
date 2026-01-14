@@ -10,13 +10,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { colors, spacing } from '../theme';
 import { useAuthStore } from '../store';
+import DeviceStackNavigator from './DeviceStackNavigator';
+import ProfileNavigator from './ProfileNavigator';
+import MarketplaceNavigator from './MarketplaceNavigator';
+import DiscoveryNavigator from './DiscoveryNavigator';
 
 // Screen imports
 import {
   HomeScreen,
   EnergyScreen,
   WalletScreen,
-  ProfileScreen,
 } from '../screens/main';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -98,6 +101,59 @@ const MainNavigator: React.FC = () => {
       />
 
       <Tab.Screen
+        name="Marketplace"
+        component={MarketplaceNavigator}
+        options={{
+          tabBarLabel: 'Marketplace',
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              size={size}
+              name="storefront-outline"
+              focusedName="storefront"
+            />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Discover"
+        component={DiscoveryNavigator}
+        options={{
+          tabBarLabel: 'Nearby',
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              size={size}
+              name="location-outline"
+              focusedName="location"
+            />
+          ),
+        }}
+      />
+
+      {isHost && (
+        <Tab.Screen
+          name="Devices"
+          component={DeviceStackNavigator}
+          options={{
+            tabBarLabel: 'Devices',
+            tabBarIcon: ({ focused, color, size }) => (
+              <TabIcon
+                focused={focused}
+                color={color}
+                size={size}
+                name="cube-outline"
+                focusedName="cube"
+              />
+            ),
+          }}
+        />
+      )}
+
+      <Tab.Screen
         name="Wallet"
         component={WalletScreen}
         options={{
@@ -116,7 +172,7 @@ const MainNavigator: React.FC = () => {
 
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ focused, color, size }) => (

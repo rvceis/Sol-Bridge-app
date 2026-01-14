@@ -42,8 +42,11 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       const token = await getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      console.log('[Client] Request to:', config.url);
+      console.log('[Client] Auth token available:', !!token);
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log('[Client] Added Authorization header');
       }
     } catch (error) {
       console.warn('Error reading token from storage:', error);
@@ -63,9 +66,23 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError<ApiError>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const url = originalRequest.url || '';
+
+    console.log('[Client] Response error:', error.response?.status, 'URL:', url);
+
+    // Don't retry auth endpoints (login, register, etc)
+    const isAuthEndpoint = url.includes('/auth/login') || 
+                           url.includes('/auth/register') ||
+                           url.includes('/auth/refresh-token');
+
+    console.log('[Client] Is auth endpoint:', isAuthEndpoint);
+    console.log('[Client] Status:', error.response?.status, 'Retry:', originalRequest._retry);
 
     // Handle 401 Unauthorized - Token expired
-    if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !originalRequest._retry) {
+    if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && 
+        !originalRequest._retry && 
+        !isAuthEndpoint) {
+      console.log('[Client] Starting token refresh...');
       if (isRefreshing) {
         // Wait for token refresh to complete
         return new Promise((resolve, reject) => {
@@ -88,21 +105,26 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = await getItem(STORAGE_KEYS.REFRESH_TOKEN);
+        console.log('[Client] Token refresh attempt, refreshToken available:', !!refreshToken);
 
         if (!refreshToken) {
+          console.error('[Client] CRITICAL: No refresh token available!');
           throw new Error('No refresh token available');
         }
 
+        console.log('[Client] Calling refresh token endpoint...');
         // Call refresh token endpoint
         const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
           refreshToken,
         });
 
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        console.log('[Client] Token refresh successful');
 
         // Store new tokens
         await setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
         await setItem(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
+        console.log('[Client] New tokens stored');
 
         // Process queued requests
         processQueue(null, accessToken);
@@ -113,6 +135,7 @@ apiClient.interceptors.response.use(
         }
         return apiClient(originalRequest);
       } catch (refreshError) {
+        console.error('[Client] Token refresh failed:', refreshError);
         // Refresh failed - logout user
         processQueue(refreshError as Error, null);
         await deleteItem(STORAGE_KEYS.ACCESS_TOKEN);

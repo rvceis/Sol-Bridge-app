@@ -20,6 +20,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Energy: undefined;
+  Devices?: undefined;
   Wallet: undefined;
   Profile: undefined;
 };
@@ -38,6 +39,13 @@ export type EnergyStackParamList = {
   DeviceManagement: undefined;
   DeviceDetails: { deviceId: string };
   AddDevice: undefined;
+};
+
+// Device Stack
+export type DeviceStackParamList = {
+  DeviceList: undefined;
+  AddDevice: undefined;
+  DeviceDetail: { deviceId: string };
 };
 
 // Wallet Stack

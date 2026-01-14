@@ -1,0 +1,147 @@
+import apiClient from './client';
+
+// Marketplace API
+export const marketplaceApi = {
+  // Get all listings
+  getListings: async (filters?: {
+    min_price?: number;
+    max_price?: number;
+    min_energy?: number;
+    max_energy?: number;
+    listing_type?: 'spot' | 'forward' | 'subscription';
+    renewable_only?: boolean;
+    seller_id?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const response = await apiClient.get(`/marketplace/listings?${params.toString()}`);
+    return response.data;
+  },
+
+  // Get listing by ID
+  getListingById: async (id: string) => {
+    const response = await apiClient.get(`/marketplace/listings/${id}`);
+    return response.data;
+  },
+
+  // Create listing
+  createListing: async (listingData: {
+    device_id?: string;
+    energy_amount_kwh: number;
+    price_per_kwh: number;
+    available_from: string;
+    available_to: string;
+    listing_type?: 'spot' | 'forward' | 'subscription';
+    min_purchase_kwh?: number;
+    location_latitude?: number;
+    location_longitude?: number;
+    renewable_cert?: boolean;
+    description?: string;
+  }) => {
+    const response = await apiClient.post('/marketplace/listings', listingData);
+    return response.data;
+  },
+
+  // Update listing
+  updateListing: async (id: string, updates: any) => {
+    const response = await apiClient.put(`/marketplace/listings/${id}`, updates);
+    return response.data;
+  },
+
+  // Delete listing
+  deleteListing: async (id: string) => {
+    const response = await apiClient.delete(`/marketplace/listings/${id}`);
+    return response.data;
+  },
+
+  // Get my listings
+  getMyListings: async () => {
+    const response = await apiClient.get('/marketplace/my-listings');
+    return response.data;
+  },
+
+  // Get my devices
+  getMyDevices: async () => {
+    const response = await apiClient.get('/devices/my-devices');
+    return response.data;
+  },
+
+  // Create device
+  createDevice: async (deviceData: {
+    device_name: string;
+    device_type: string;
+    capacity_kwh?: number | null;
+    efficiency_rating?: number | null;
+  }) => {
+    const response = await apiClient.post('/devices', deviceData);
+    return response.data;
+  },
+
+  // Update device
+  updateDevice: async (deviceId: string, updates: any) => {
+    const response = await apiClient.put(`/devices/${deviceId}`, updates);
+    return response.data;
+  },
+
+  // Delete device
+  deleteDevice: async (deviceId: string) => {
+    const response = await apiClient.delete(`/devices/${deviceId}`);
+    return response.data;
+  },
+
+  // Get my payment methods
+  getMyPaymentMethods: async () => {
+    const response = await apiClient.get('/users/payment-methods');
+    return response.data;
+  },
+
+  // Buy energy
+  buyEnergy: async (transactionData: {
+    listing_id: string;
+    energy_amount_kwh: number;
+    payment_method_id: string;
+  }) => {
+    const response = await apiClient.post('/marketplace/transactions', transactionData);
+    return response.data;
+  },
+
+  // Get my transactions
+  getMyTransactions: async (role: 'buyer' | 'seller' = 'buyer') => {
+    const response = await apiClient.get(`/marketplace/transactions?role=${role}`);
+    return response.data;
+  },
+
+  // Get transaction by ID
+  getTransactionById: async (id: string) => {
+    const response = await apiClient.get(`/marketplace/transactions/${id}`);
+    return response.data;
+  },
+
+  // Update transaction
+  updateTransaction: async (id: string, updates: {
+    status?: string;
+    payment_status?: string;
+    delivery_status?: string;
+    rating?: number;
+    review?: string;
+  }) => {
+    const response = await apiClient.put(`/marketplace/transactions/${id}`, updates);
+    return response.data;
+  },
+
+  // Get market statistics
+  getMarketStatistics: async (days: number = 30) => {
+    const response = await apiClient.get(`/marketplace/statistics?days=${days}`);
+    return response.data;
+  },
+};
+
+export default marketplaceApi;

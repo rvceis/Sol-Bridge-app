@@ -67,19 +67,37 @@ class AuthService {
    * Login user
    */
   async login(data: LoginRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await api.post<AuthResponse>(ENDPOINTS.auth.login, data);
+    try {
+      const response = await api.post<AuthResponse>(ENDPOINTS.auth.login, data);
+      console.log('[Auth] Login response object keys:', Object.keys(response || {}));
+      console.log('[Auth] Login response.success:', response?.success);
+      console.log('[Auth] Login response.data keys:', Object.keys(response?.data || {}));
+      console.log('[Auth] Full response:', JSON.stringify(response, null, 2));
 
-    if (response.success && response.data) {
-      // Store tokens securely
-      await this.storeTokens(response.data.accessToken, response.data.refreshToken);
-      // Store user data
-      await setItem(
-        STORAGE_KEYS.USER_DATA,
-        JSON.stringify(response.data.user)
-      );
+      if (response.success && response.data) {
+        // Store tokens securely
+        console.log('[Auth] Login successful, storing tokens...');
+        console.log('[Auth] response.data.accessToken exists:', !!response.data.accessToken);
+        console.log('[Auth] response.data.refreshToken exists:', !!response.data.refreshToken);
+        
+        await this.storeTokens(response.data.accessToken, response.data.refreshToken);
+        console.log('[Auth] Tokens stored successfully');
+        
+        // Store user data
+        await setItem(
+          STORAGE_KEYS.USER_DATA,
+          JSON.stringify(response.data.user)
+        );
+        console.log('[Auth] User data stored successfully');
+      } else {
+        console.error('[Auth] Login response was not successful:', response);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('[Auth] Login failed:', error);
+      throw error;
     }
-
-    return response;
   }
 
   /**
@@ -183,11 +201,35 @@ class AuthService {
    * Store tokens securely
    */
   private async storeTokens(
-    accessToken: string,
-    refreshToken: string
+    accessToken: string | undefined,
+    refreshToken: string | undefined
   ): Promise<void> {
+    console.log('[Auth] storeTokens called');
+    console.log('[Auth] accessToken param:', !!accessToken, typeof accessToken);
+    console.log('[Auth] refreshToken param:', !!refreshToken, typeof refreshToken);
+    
+    if (!accessToken) {
+      console.error('[Auth] ERROR: accessToken is missing or empty!');
+      return;
+    }
+    if (!refreshToken) {
+      console.error('[Auth] ERROR: refreshToken is missing or empty!');
+      return;
+    }
+    
+    console.log('[Auth] Storing tokens...');
+    console.log('[Auth] AccessToken length:', accessToken.length);
+    console.log('[Auth] RefreshToken length:', refreshToken.length);
+    
     await setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
     await setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+    
+    // Verify tokens were stored
+    const stored = await getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    console.log('[Auth] Token storage verification - refreshToken retrieved:', !!stored);
+    if (!stored) {
+      console.error('[Auth] CRITICAL: Refresh token not stored!');
+    }
   }
 
   /**

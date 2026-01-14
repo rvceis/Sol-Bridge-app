@@ -13,10 +13,12 @@ import {
   Image,
   StatusBar,
   Alert,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography } from '../../theme';
 import { useAuthStore } from '../../store';
@@ -69,6 +71,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
 const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -130,12 +133,12 @@ const ProfileScreen: React.FC = () => {
 
   const handleEditProfile = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Navigate to edit profile
+    (navigation as any).navigate('PersonalInfo');
   };
 
-  const handleMenuItem = async () => {
+  const handleMenuItem = async (screenName: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Handle menu item press
+    (navigation as any).navigate(screenName);
   };
 
   return (
@@ -236,26 +239,26 @@ const ProfileScreen: React.FC = () => {
               icon="person-outline"
               label="Personal Information"
               iconColor={colors.primary.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('PersonalInfo')}
             />
             <MenuItem
               icon="location-outline"
               label="Address"
               value="Add address"
               iconColor={colors.secondary.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Address')}
             />
             <MenuItem
               icon="card-outline"
               label="Payment Methods"
               iconColor={colors.success.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('PaymentMethods')}
             />
             <MenuItem
               icon="document-text-outline"
               label="Documents"
               iconColor={colors.info.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Documents')}
             />
           </View>
         </View>
@@ -268,27 +271,27 @@ const ProfileScreen: React.FC = () => {
               label="Notifications"
               showBadge
               iconColor={colors.warning.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Notifications')}
             />
             <MenuItem
               icon="shield-checkmark-outline"
               label="Security"
               iconColor={colors.success.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Security')}
             />
             <MenuItem
               icon="language-outline"
               label="Language"
               value="English"
               iconColor={colors.info.main}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Settings')}
             />
             <MenuItem
               icon="moon-outline"
               label="Dark Mode"
               value="Off"
               iconColor={colors.text.secondary}
-              onPress={handleMenuItem}
+              onPress={() => handleMenuItem('Settings')}
             />
           </View>
         </View>
@@ -300,26 +303,26 @@ const ProfileScreen: React.FC = () => {
               icon="help-circle-outline"
               label="Help Center"
               iconColor={colors.info.main}
-              onPress={handleMenuItem}
+              onPress={() => {}}
             />
             <MenuItem
               icon="chatbubble-outline"
               label="Contact Us"
               iconColor={colors.secondary.main}
-              onPress={handleMenuItem}
+              onPress={() => {}}
             />
             <MenuItem
               icon="star-outline"
               label="Rate App"
               iconColor={colors.warning.main}
-              onPress={handleMenuItem}
+              onPress={() => {}}
             />
             <MenuItem
               icon="information-circle-outline"
               label="About"
               value="v1.0.0"
               iconColor={colors.text.secondary}
-              onPress={handleMenuItem}
+              onPress={() => {}}
             />
           </View>
         </View>

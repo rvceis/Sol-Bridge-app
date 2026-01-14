@@ -49,6 +49,11 @@ const ENV = isDev ? 'development' : 'production';
 export const API_BASE_URL = API_CONFIG[ENV].baseUrl;
 export const API_TIMEOUT = API_CONFIG[ENV].timeout;
 
+// Debug log
+console.log('[Config] Environment:', ENV);
+console.log('[Config] API Base URL:', API_BASE_URL);
+console.log('[Config] Platform:', Platform.OS);
+
 // API Endpoints
 export const ENDPOINTS = {
   // Authentication
