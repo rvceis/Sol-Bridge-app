@@ -193,7 +193,7 @@ export default function NearbyUsersScreen() {
         </View>
 
         <View style={styles.distanceContainer}>
-          <Text style={styles.distanceValue}>{(item.distance_km || 0).toFixed(1)}</Text>
+          <Text style={styles.distanceValue}>{Number(item.distance_km || 0).toFixed(1)}</Text>
           <Text style={styles.distanceUnit}>km</Text>
         </View>
       </View>
@@ -203,7 +203,7 @@ export default function NearbyUsersScreen() {
           <>
             <View style={styles.statItem}>
               <Ionicons name="flash" size={16} color="#FF9800" />
-              <Text style={styles.statValue}>{(item.available_energy_kwh || 0).toFixed(0)} kWh</Text>
+              <Text style={styles.statValue}>{Number(item.available_energy_kwh || 0).toFixed(0)} kWh</Text>
               <Text style={styles.statLabel}>Available</Text>
             </View>
             <View style={styles.statDivider} />
@@ -226,7 +226,7 @@ export default function NearbyUsersScreen() {
         <View style={styles.statItem}>
           <Ionicons name="star" size={16} color="#FFD700" />
           <Text style={styles.statValue}>
-            {(parseFloat(String(item.average_rating || 0))).toFixed(1)}
+            {Number(item.average_rating || 0).toFixed(1)}
           </Text>
           <Text style={styles.statLabel}>Rating</Text>
         </View>

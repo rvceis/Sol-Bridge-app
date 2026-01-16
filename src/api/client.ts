@@ -42,18 +42,21 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       const token = await getItem(STORAGE_KEYS.ACCESS_TOKEN);
-      console.log('[Client] Request to:', config.url);
+      console.log('[Client] ========== REQUEST ==========');
+      console.log('[Client] Method:', config.method?.toUpperCase());
+      console.log('[Client] URL:', config.baseURL + config.url);
       console.log('[Client] Auth token available:', !!token);
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
         console.log('[Client] Added Authorization header');
       }
     } catch (error) {
-      console.warn('Error reading token from storage:', error);
+      console.warn('[Client] Error reading token from storage:', error);
     }
     return config;
   },
   (error) => {
+    console.error('[Client] Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -61,14 +64,23 @@ apiClient.interceptors.request.use(
 // Response interceptor - Handle errors and token refresh
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('[Client] ========== RESPONSE ==========');
+    console.log('[Client] Status:', response.status);
+    console.log('[Client] URL:', response.config.url);
     // Return successful response data directly
     return response;
   },
   async (error: AxiosError<ApiError>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    const url = originalRequest.url || '';
+    const url = originalRequest?.url || '';
 
-    console.log('[Client] Response error:', error.response?.status, 'URL:', url);
+    console.log('[Client] ========== ERROR ==========');
+    console.error('[Client] Error code:', error.code);
+    console.error('[Client] Error message:', error.message);
+    console.error('[Client] Response status:', error.response?.status);
+    console.error('[Client] Response data:', error.response?.data);
+    console.error('[Client] URL:', url);
+    console.error('[Client] Base URL:', originalRequest?.baseURL);
 
     // Don't retry auth endpoints (login, register, etc)
     const isAuthEndpoint = url.includes('/auth/login') || 
@@ -76,7 +88,7 @@ apiClient.interceptors.response.use(
                            url.includes('/auth/refresh-token');
 
     console.log('[Client] Is auth endpoint:', isAuthEndpoint);
-    console.log('[Client] Status:', error.response?.status, 'Retry:', originalRequest._retry);
+    console.log('[Client] Retry attempted:', originalRequest?._retry);
 
     // Handle 401 Unauthorized - Token expired
     if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && 

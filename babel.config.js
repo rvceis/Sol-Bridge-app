@@ -3,7 +3,7 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'babel-plugin-transform-import-meta',
+      ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
     ],
   };
 };

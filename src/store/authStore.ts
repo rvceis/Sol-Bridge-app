@@ -24,6 +24,7 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshAuth: () => Promise<boolean>;
   updateUser: (userData: Partial<User>) => Promise<boolean>;
+  setUser: (user: User | null) => void;
   setOnboarded: (value: boolean) => void;
   clearError: () => void;
   checkAuthStatus: () => Promise<void>;
@@ -144,6 +145,11 @@ export const useAuthStore = create<AuthState>()(
           set({ error: error.message || 'Failed to update profile' });
           return false;
         }
+      },
+
+      // Set user directly (for manual updates)
+      setUser: (user: User | null) => {
+        set({ user });
       },
 
       // Set onboarded status

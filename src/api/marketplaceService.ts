@@ -26,6 +26,36 @@ export const marketplaceApi = {
     return response.data;
   },
 
+  // Get nearby listings
+  getNearbyListings: async (
+    latitude: number,
+    longitude: number,
+    filters?: {
+      min_price?: number;
+      max_price?: number;
+      min_energy?: number;
+      max_energy?: number;
+      listing_type?: 'spot' | 'forward' | 'subscription';
+      renewable_only?: boolean;
+      radius?: number; // in kilometers
+      limit?: number;
+    }
+  ) => {
+    const params = new URLSearchParams();
+    params.append('latitude', String(latitude));
+    params.append('longitude', String(longitude));
+    
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          params.append(key, String(value));
+        }
+      });
+    }
+    const response = await apiClient.get(`/marketplace/nearby-listings?${params.toString()}`);
+    return response.data;
+  },
+
   // Get listing by ID
   getListingById: async (id: string) => {
     const response = await apiClient.get(`/marketplace/listings/${id}`);

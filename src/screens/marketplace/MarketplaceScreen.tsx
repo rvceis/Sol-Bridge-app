@@ -11,9 +11,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location';
 import { marketplaceApi } from '../../api/marketplaceService';
 
 interface Listing {
@@ -31,6 +33,7 @@ interface Listing {
   renewable_cert: boolean;
   location_lat?: number;
   location_lon?: number;
+  distance_km?: number; // For nearby listings
 }
 
 export default function MarketplaceScreen() {
@@ -41,6 +44,9 @@ export default function MarketplaceScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'all' | 'nearby'>('all');
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationPermission, setLocationPermission] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -50,15 +56,45 @@ export default function MarketplaceScreen() {
     maxEnergy: '',
     listingType: 'all',
     renewableOnly: false,
+    radius: '50', // Default 50km radius for nearby
   });
 
   useEffect(() => {
+    requestLocationPermission();
     loadListings();
   }, []);
 
   useEffect(() => {
+    if (viewMode === 'nearby' && userLocation) {
+      loadNearbyListings();
+    }
+  }, [viewMode]);
+
+  useEffect(() => {
     applyFilters();
   }, [listings, searchQuery, filters]);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        setLocationPermission(true);
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      } else {
+        setLocationPermission(false);
+        Alert.alert(
+          'Location Permission',
+          'Location permission is needed to show nearby listings. You can still browse all listings.'
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+    }
+  };
 
   const loadListings = async () => {
     try {
@@ -66,6 +102,7 @@ export default function MarketplaceScreen() {
         status: 'active',
       });
       setListings(response.data || []);
+      setViewMode('all');
     } catch (error: any) {
       Alert.alert('Error', 'Failed to load marketplace listings');
     } finally {
@@ -74,9 +111,38 @@ export default function MarketplaceScreen() {
     }
   };
 
+  const loadNearbyListings = async () => {
+    if (!userLocation) {
+      Alert.alert('Location Required', 'Please enable location to see nearby listings');
+      setViewMode('all');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await marketplaceApi.getNearbyListings(
+        userLocation.latitude,
+        userLocation.longitude,
+        {
+          radius: parseInt(filters.radius) || 50,
+        }
+      );
+      setListings(response.data || []);
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to load nearby listings');
+      setViewMode('all');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
-    loadListings();
+    if (viewMode === 'nearby') {
+      loadNearbyListings();
+    } else {
+      loadListings();
+    }
   };
 
   const applyFilters = () => {
@@ -128,11 +194,14 @@ export default function MarketplaceScreen() {
       maxEnergy: '',
       listingType: 'all',
       renewableOnly: false,
+      radius: '50',
     });
   };
 
   const renderListingCard = ({ item }: { item: Listing }) => {
-    const totalPrice = item.energy_amount_kwh * item.price_per_kwh;
+    const energyAmount = Number(item.energy_amount_kwh) || 0;
+    const pricePerKwh = Number(item.price_per_kwh) || 0;
+    const totalPrice = energyAmount * pricePerKwh;
 
     return (
       <TouchableOpacity
@@ -143,36 +212,44 @@ export default function MarketplaceScreen() {
           <View style={styles.sellerInfo}>
             <Ionicons name="person-circle" size={32} color="#007AFF" />
             <View style={styles.sellerDetails}>
-              <Text style={styles.sellerName}>{item.seller_name}</Text>
+              <Text style={styles.sellerName}>{item.seller_name || 'Unknown Seller'}</Text>
               <Text style={styles.deviceName}>{item.device_name || 'Solar Device'}</Text>
             </View>
           </View>
-          {item.renewable_cert && (
-            <View style={styles.certBadge}>
-              <Ionicons name="leaf" size={16} color="#4CAF50" />
-            </View>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {item.renewable_cert && (
+              <View style={styles.certBadge}>
+                <Ionicons name="leaf" size={16} color="#4CAF50" />
+              </View>
+            )}
+            {item.distance_km !== undefined && item.distance_km !== null && (
+              <View style={styles.distanceBadge}>
+                <Ionicons name="location" size={12} color="#FF6B6B" />
+                <Text style={styles.distanceText}>{Number(item.distance_km).toFixed(1)} km</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <View style={styles.cardBody}>
           <View style={styles.energyInfo}>
             <Ionicons name="flash" size={20} color="#FF9800" />
-            <Text style={styles.energyAmount}>{item.energy_amount_kwh.toFixed(2)} kWh</Text>
+            <Text style={styles.energyAmount}>{energyAmount.toFixed(2)} kWh</Text>
           </View>
 
           <View style={styles.priceInfo}>
             <Text style={styles.priceLabel}>Price</Text>
-            <Text style={styles.priceAmount}>₹{item.price_per_kwh.toFixed(2)}/kWh</Text>
+            <Text style={styles.priceAmount}>₹{pricePerKwh.toFixed(2)}/kWh</Text>
             <Text style={styles.totalPrice}>Total: ₹{totalPrice.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.cardFooter}>
           <View style={styles.typeChip}>
-            <Text style={styles.typeText}>{item.listing_type.replace('_', ' ')}</Text>
+            <Text style={styles.typeText}>{(item.listing_type || 'spot').replace('_', ' ')}</Text>
           </View>
           <Text style={styles.availabilityText}>
-            Available {new Date(item.available_from).toLocaleDateString()}
+            Available {item.available_from ? new Date(item.available_from).toLocaleDateString() : 'N/A'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -211,6 +288,57 @@ export default function MarketplaceScreen() {
           {(filters.minPrice || filters.maxPrice || filters.minEnergy || filters.maxEnergy || 
             filters.listingType !== 'all' || filters.renewableOnly) && (
             <View style={styles.filterBadge} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* View Mode Tabs */}
+      <View style={styles.viewModeContainer}>
+        <TouchableOpacity
+          style={[styles.viewModeTab, viewMode === 'all' && styles.viewModeTabActive]}
+          onPress={() => {
+            setViewMode('all');
+            loadListings();
+          }}
+        >
+          <Ionicons 
+            name="globe-outline" 
+            size={20} 
+            color={viewMode === 'all' ? '#007AFF' : '#999'} 
+          />
+          <Text style={[styles.viewModeText, viewMode === 'all' && styles.viewModeTextActive]}>
+            All Listings
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.viewModeTab, viewMode === 'nearby' && styles.viewModeTabActive]}
+          onPress={() => {
+            if (locationPermission && userLocation) {
+              setViewMode('nearby');
+              loadNearbyListings();
+            } else {
+              Alert.alert(
+                'Location Required',
+                'Please enable location permissions to see nearby listings.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Enable', onPress: requestLocationPermission },
+                ]
+              );
+            }
+          }}
+        >
+          <Ionicons 
+            name="location" 
+            size={20} 
+            color={viewMode === 'nearby' ? '#007AFF' : '#999'} 
+          />
+          <Text style={[styles.viewModeText, viewMode === 'nearby' && styles.viewModeTextActive]}>
+            Nearby
+          </Text>
+          {!locationPermission && (
+            <Ionicons name="lock-closed" size={14} color="#FF6B6B" style={{ marginLeft: 4 }} />
           )}
         </TouchableOpacity>
       </View>
@@ -303,7 +431,7 @@ export default function MarketplaceScreen() {
               {/* Listing Type */}
               <Text style={styles.filterLabel}>Listing Type</Text>
               <View style={styles.typeButtons}>
-                {['all', 'spot', 'scheduled', 'subscription'].map((type) => (
+                {['all', 'spot', 'forward', 'subscription'].map((type) => (
                   <TouchableOpacity
                     key={type}
                     style={[
@@ -338,6 +466,23 @@ export default function MarketplaceScreen() {
                 />
                 <Text style={styles.checkboxLabel}>Renewable Energy Only</Text>
               </TouchableOpacity>
+
+              {/* Radius Filter (only for nearby view) */}
+              {viewMode === 'nearby' && (
+                <>
+                  <Text style={styles.filterLabel}>Search Radius (km)</Text>
+                  <TextInput
+                    style={styles.rangeInput}
+                    placeholder="Radius in kilometers"
+                    keyboardType="numeric"
+                    value={filters.radius}
+                    onChangeText={(val) => setFilters({ ...filters, radius: val })}
+                  />
+                  <Text style={styles.helperText}>
+                    Current: {filters.radius || '50'} km radius
+                  </Text>
+                </>
+              )}
             </ScrollView>
 
             {/* Modal Actions */}
@@ -640,6 +785,55 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginLeft: 12,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  viewModeContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  viewModeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  viewModeTabActive: {
+    borderBottomColor: '#007AFF',
+  },
+  viewModeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#999',
+    marginLeft: 8,
+  },
+  viewModeTextActive: {
+    color: '#007AFF',
+  },
+  distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  distanceText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FF6B6B',
   },
   modalActions: {
     flexDirection: 'row',

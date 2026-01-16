@@ -6,7 +6,7 @@
 import { Platform } from 'react-native';
 
 // Your machine's IP address for physical device testing
-const LOCAL_IP = '10.167.159.193';
+const LOCAL_IP = '10.251.149.193';
 
 // Determine correct localhost URL based on platform
 const getDevBaseUrl = () => {
@@ -41,8 +41,15 @@ export const API_CONFIG = {
   },
 };
 
-// Current environment - use process.env for web compatibility
-const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+// Current environment - check __DEV__ global (React Native/Expo)
+let isDev = true;
+try {
+  // @ts-ignore
+  isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : true;
+} catch (e) {
+  isDev = true;
+}
+
 const ENV = isDev ? 'development' : 'production';
 
 // Export current config
@@ -120,6 +127,24 @@ export const HTTP_STATUS = {
   CONFLICT: 409,
   RATE_LIMITED: 429,
   SERVER_ERROR: 500,
+};
+
+// Test connectivity to backend
+export const testConnection = async (): Promise<boolean> => {
+  try {
+    console.log('[Config] Testing connection to:', API_BASE_URL);
+    const response = await fetch(API_BASE_URL.replace('/api/v1', '') + '/health', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    console.log('[Config] Connection test status:', response.status);
+    return response.ok;
+  } catch (error) {
+    console.error('[Config] Connection test failed:', error);
+    return false;
+  }
 };
 
 export default {

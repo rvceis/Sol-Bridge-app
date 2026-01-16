@@ -53,6 +53,8 @@ export type WalletStackParamList = {
   WalletOverview: undefined;
   TransactionHistory: undefined;
   TransactionDetails: { transactionId: string };
+  TopUp: undefined;
+  Transactions: undefined;
   Topup: undefined;
   Withdraw: undefined;
   PaymentSuccess: { transactionId: string };

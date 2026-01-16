@@ -30,7 +30,7 @@ export default function CreateListingScreen() {
   const [selectedDevice, setSelectedDevice] = useState('');
   const [energyAmount, setEnergyAmount] = useState('');
   const [pricePerKwh, setPricePerKwh] = useState('');
-  const [listingType, setListingType] = useState<'spot' | 'scheduled' | 'subscription'>('spot');
+  const [listingType, setListingType] = useState<'spot' | 'forward' | 'subscription'>('spot');
   const [minPurchase, setMinPurchase] = useState('1');
   const [availableFrom, setAvailableFrom] = useState(new Date());
   const [availableTo, setAvailableTo] = useState(
@@ -269,7 +269,7 @@ export default function CreateListingScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Listing Type</Text>
           <View style={styles.typeButtons}>
-            {(['spot', 'scheduled', 'subscription'] as const).map((type) => (
+            {(['spot', 'forward', 'subscription'] as const).map((type) => (
               <TouchableOpacity
                 key={type}
                 style={[

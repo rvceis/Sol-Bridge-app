@@ -18,6 +18,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography, gradients } from '../../theme';
 import {
@@ -35,6 +36,7 @@ type FilterType = 'all' | 'credit' | 'debit';
 
 const WalletScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const wallet = useWalletStore((state) => state.wallet);
   const transactions = useWalletStore((state) => state.transactions);
@@ -71,7 +73,7 @@ const WalletScreen: React.FC = () => {
 
   const handleTopup = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Navigate to topup screen
+    navigation.navigate('TopUp' as never);
   };
 
   const handleWithdraw = async () => {

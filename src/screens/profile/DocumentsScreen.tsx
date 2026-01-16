@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Animated, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { profileApi } from '../../api/profileService';
+import DocumentUploadModal from '../../components/modals/DocumentUploadModal';
 
 interface Document {
   id: string;
@@ -18,6 +19,7 @@ export default function DocumentsScreen() {
   const slideAnim = new Animated.Value(0);
   const [loading, setLoading] = React.useState(true);
   const [documents, setDocuments] = React.useState<Document[]>([]);
+  const [uploadModalVisible, setUploadModalVisible] = React.useState(false);
 
   useEffect(() => {
     Animated.spring(slideAnim, {
@@ -26,6 +28,13 @@ export default function DocumentsScreen() {
     }).start();
     loadDocuments();
   }, []);
+
+  // Reload documents when screen is focused (after upload)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDocuments();
+    }, [])
+  );
 
   const loadDocuments = async () => {
     try {
@@ -142,7 +151,7 @@ export default function DocumentsScreen() {
 
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => Alert.alert('Coming Soon', 'Document upload feature will be available soon')}
+            onPress={() => setUploadModalVisible(true)}
           >
             <Ionicons name="add-circle" size={24} color="#007AFF" />
             <Text style={styles.addButtonText}>Upload Document</Text>
@@ -154,6 +163,16 @@ export default function DocumentsScreen() {
           </View>
         </View>
       )}
+
+      {/* Document Upload Modal */}
+      <DocumentUploadModal
+        visible={uploadModalVisible}
+        onClose={() => setUploadModalVisible(false)}
+        onSuccess={(newDocument) => {
+          // Add the new document to the list
+          setDocuments([newDocument, ...documents]);
+        }}
+      />
     </ScrollView>
   );
 }

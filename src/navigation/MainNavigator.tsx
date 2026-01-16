@@ -14,12 +14,12 @@ import DeviceStackNavigator from './DeviceStackNavigator';
 import ProfileNavigator from './ProfileNavigator';
 import MarketplaceNavigator from './MarketplaceNavigator';
 import DiscoveryNavigator from './DiscoveryNavigator';
+import WalletNavigator from './WalletNavigator';
 
 // Screen imports
 import {
   HomeScreen,
   EnergyScreen,
-  WalletScreen,
 } from '../screens/main';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -155,7 +155,7 @@ const MainNavigator: React.FC = () => {
 
       <Tab.Screen
         name="Wallet"
-        component={WalletScreen}
+        component={WalletNavigator}
         options={{
           tabBarLabel: 'Wallet',
           tabBarIcon: ({ focused, color, size }) => (

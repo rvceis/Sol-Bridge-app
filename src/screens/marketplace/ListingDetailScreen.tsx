@@ -12,8 +12,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import RazorpayCheckout from 'react-native-razorpay';
 import { marketplaceApi } from '../../api/marketplaceService';
-import { profileApi } from '../../api/profileService';
+import { paymentService } from '../../services/paymentService';
+import { notificationService } from '../../services/notificationService';
+import { useAuthStore } from '../../store/authStore';
+import { useWalletStore } from '../../store/walletStore';
 
 interface ListingDetail {
   id: string;
@@ -49,18 +53,31 @@ export default function ListingDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { listingId } = route.params as { listingId: string };
+  const user = useAuthStore((state) => state.user);
+  const wallet = useWalletStore((state) => state.wallet);
+  const fetchBalance = useWalletStore((state) => state.fetchBalance);
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState('');
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedPayment, setSelectedPayment] = useState<string>('');
   const [purchasing, setPurchasing] = useState(false);
+  const [razorpayKey, setRazorpayKey] = useState<string>('');
 
   useEffect(() => {
     loadListingDetail();
+    loadRazorpayKey();
+    fetchBalance();
   }, []);
+
+  const loadRazorpayKey = async () => {
+    try {
+      const key = await paymentService.getRazorpayKey();
+      setRazorpayKey(key);
+    } catch (error) {
+      console.error('Error loading Razorpay key:', error);
+    }
+  };
 
   const loadListingDetail = async () => {
     try {
@@ -75,42 +92,17 @@ export default function ListingDetailScreen() {
   };
 
   const handleBuyPress = async () => {
-    try {
-      const response = await profileApi.getPaymentMethods();
-      setPaymentMethods(response.data || []);
-      
-      if (response.data?.length === 0) {
-        Alert.alert(
-          'No Payment Methods',
-          'Please add a payment method in your profile to purchase energy.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Add Payment Method', onPress: () => navigation.navigate('Profile' as never) },
-          ]
-        );
-        return;
-      }
-
-      const defaultMethod = response.data?.find((pm: PaymentMethod) => pm.is_default);
-      if (defaultMethod) {
-        setSelectedPayment(defaultMethod.id);
-      }
-      
-      setPurchaseAmount(listing?.min_purchase_kwh?.toString() || '1');
-      setShowBuyModal(true);
-    } catch (error: any) {
-      Alert.alert('Error', 'Failed to load payment methods');
+    if (!wallet) {
+      await fetchBalance();
     }
+    
+    setPurchaseAmount(listing?.min_purchase_kwh?.toString() || '1');
+    setShowBuyModal(true);
   };
 
   const handlePurchase = async () => {
     if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) {
       Alert.alert('Invalid Amount', 'Please enter a valid energy amount');
-      return;
-    }
-
-    if (!selectedPayment) {
-      Alert.alert('Payment Method Required', 'Please select a payment method');
       return;
     }
 
@@ -131,17 +123,49 @@ export default function ListingDetailScreen() {
       return;
     }
 
+    const totalCost = amount * (listing?.price_per_kwh || 0);
+    const walletBalance = wallet?.balance || 0;
+
+    // Check if sufficient balance
+    if (walletBalance < totalCost) {
+      Alert.alert(
+        'Insufficient Balance',
+        `You need ₹${totalCost.toFixed(2)} but have ₹${walletBalance.toFixed(2)}. Would you like to top up?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Top Up', 
+            onPress: () => {
+              setShowBuyModal(false);
+              navigation.navigate('TopUp' as never);
+            }
+          },
+        ]
+      );
+      return;
+    }
+
     setPurchasing(true);
     try {
-      await marketplaceApi.buyEnergy({
+      // Create energy transaction
+      const response = await marketplaceApi.buyEnergy({
         listing_id: listingId,
         energy_amount_kwh: amount,
-        payment_method_id: selectedPayment,
       });
+
+      // Show success notification
+      await notificationService.scheduleNotification(
+        'Purchase Successful! ⚡',
+        `You bought ${amount} kWh of energy for ₹${totalCost.toFixed(2)}`,
+        { type: 'energy_purchase', amount: totalCost }
+      );
+
+      // Refresh wallet balance
+      await fetchBalance();
 
       Alert.alert(
         'Purchase Successful!',
-        `You have successfully purchased ${amount} kWh of energy.`,
+        `You have successfully purchased ${amount} kWh of energy for ₹${totalCost.toFixed(2)}.`,
         [
           { text: 'View Transactions', onPress: () => navigation.navigate('Transactions' as never) },
           { text: 'OK', onPress: () => navigation.goBack() },
@@ -222,7 +246,7 @@ export default function ListingDetailScreen() {
             </View>
             <View style={styles.detailInfo}>
               <Text style={styles.detailLabel}>Price per kWh</Text>
-              <Text style={styles.detailValue}>₹{listing.price_per_kwh.toFixed(2)}</Text>
+              <Text style={styles.detailValue}>₹{listing.price_per_kwh ? listing.price_per_kwh.toFixed(2) : 'N/A'}</Text>
             </View>
           </View>
 
@@ -317,6 +341,26 @@ export default function ListingDetailScreen() {
             </View>
 
             <ScrollView style={styles.modalBody}>
+              {/* Wallet Balance */}
+              <View style={styles.walletCard}>
+                <Ionicons name="wallet" size={24} color="#007AFF" />
+                <View style={styles.walletInfo}>
+                  <Text style={styles.walletLabel}>Wallet Balance</Text>
+                  <Text style={styles.walletBalance}>₹{(wallet?.balance || 0).toFixed(2)}</Text>
+                </View>
+                {wallet && wallet.balance < purchaseTotal && (
+                  <TouchableOpacity 
+                    style={styles.topUpButton}
+                    onPress={() => {
+                      setShowBuyModal(false);
+                      navigation.navigate('TopUp' as never);
+                    }}
+                  >
+                    <Text style={styles.topUpText}>Top Up</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
               {/* Amount Input */}
               <Text style={styles.inputLabel}>Energy Amount (kWh)</Text>
               <TextInput
@@ -330,37 +374,6 @@ export default function ListingDetailScreen() {
                 Available: {listing.energy_amount_kwh} kWh
               </Text>
 
-              {/* Payment Method */}
-              <Text style={[styles.inputLabel, { marginTop: 20 }]}>Payment Method</Text>
-              {paymentMethods.map((method) => (
-                <TouchableOpacity
-                  key={method.id}
-                  style={[
-                    styles.paymentOption,
-                    selectedPayment === method.id && styles.paymentOptionSelected,
-                  ]}
-                  onPress={() => setSelectedPayment(method.id)}
-                >
-                  <Ionicons
-                    name={selectedPayment === method.id ? 'radio-button-on' : 'radio-button-off'}
-                    size={24}
-                    color={selectedPayment === method.id ? '#007AFF' : '#999'}
-                  />
-                  <View style={styles.paymentInfo}>
-                    <Text style={styles.paymentText}>
-                      {method.method_type === 'card'
-                        ? `${method.card_brand} •••• ${method.card_last4}`
-                        : method.method_type === 'upi'
-                        ? method.upi_id
-                        : method.bank_name}
-                    </Text>
-                    {method.is_default && (
-                      <Text style={styles.defaultBadge}>DEFAULT</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-
               {/* Summary */}
               {purchaseAmount && parseFloat(purchaseAmount) > 0 && (
                 <View style={styles.summaryCard}>
@@ -371,7 +384,7 @@ export default function ListingDetailScreen() {
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Price per kWh</Text>
-                    <Text style={styles.summaryValue}>₹{listing.price_per_kwh.toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>₹{listing.price_per_kwh ? listing.price_per_kwh.toFixed(2) : 'N/A'}</Text>
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Platform Fee (5%)</Text>
@@ -603,6 +616,42 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+    marginTop: 16,
+  },
+  walletCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F8FF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  walletInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  walletLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  walletBalance: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginTop: 2,
+  },
+  topUpButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  topUpText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
   textInput: {
     borderWidth: 1,
@@ -616,34 +665,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 4,
-  },
-  paymentOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  paymentOptionSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#F0F8FF',
-  },
-  paymentInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  paymentText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  defaultBadge: {
-    fontSize: 10,
-    color: '#007AFF',
-    fontWeight: '600',
-    marginTop: 2,
   },
   summaryCard: {
     backgroundColor: '#F9F9F9',
