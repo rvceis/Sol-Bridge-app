@@ -192,9 +192,9 @@ export default function ListingDetailScreen() {
     return null;
   }
 
-  const totalPrice = listing.energy_amount_kwh * listing.price_per_kwh;
+  const totalPrice = listing.energy_amount_kwh * (listing.price_per_kwh || 0);
   const purchaseTotal = purchaseAmount
-    ? parseFloat(purchaseAmount) * listing.price_per_kwh
+    ? parseFloat(purchaseAmount) * (listing.price_per_kwh || 0)
     : 0;
 
   return (
