@@ -256,7 +256,7 @@ export default function ListingDetailScreen() {
             </View>
             <View style={styles.detailInfo}>
               <Text style={styles.detailLabel}>Total Price</Text>
-              <Text style={styles.detailValue}>₹{totalPrice.toFixed(2)}</Text>
+              <Text style={styles.detailValue}>₹{isNaN(totalPrice) ? 'N/A' : totalPrice.toFixed(2)}</Text>
             </View>
           </View>
 
@@ -310,7 +310,7 @@ export default function ListingDetailScreen() {
       <View style={styles.footer}>
         <View style={styles.priceFooter}>
           <Text style={styles.footerLabel}>Total Price</Text>
-          <Text style={styles.footerPrice}>₹{totalPrice.toFixed(2)}</Text>
+          <Text style={styles.footerPrice}>₹{isNaN(totalPrice) ? 'N/A' : totalPrice.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.buyButton, listing.status !== 'active' && styles.buyButtonDisabled]}
@@ -388,11 +388,11 @@ export default function ListingDetailScreen() {
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Platform Fee (5%)</Text>
-                    <Text style={styles.summaryValue}>₹{(purchaseTotal * 0.05).toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>₹{isNaN(purchaseTotal) ? 'N/A' : (purchaseTotal * 0.05).toFixed(2)}</Text>
                   </View>
-                  <View style={[styles.summaryRow, styles.summaryTotal]}>
+                  <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total Amount</Text>
-                    <Text style={styles.totalValue}>₹{(purchaseTotal * 1.05).toFixed(2)}</Text>
+                    <Text style={styles.totalValue}>₹{isNaN(purchaseTotal) ? 'N/A' : (purchaseTotal * 1.05).toFixed(2)}</Text>
                   </View>
                 </View>
               )}
