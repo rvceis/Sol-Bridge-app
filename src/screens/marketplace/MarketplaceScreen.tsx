@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { marketplaceApi } from '../../api/marketplaceService';
 import { useResponsive } from '../../hooks/useResponsive';
+import { safeToFixed } from '../../utils/formatters';
 
 interface Listing {
   id: string;
@@ -60,6 +61,368 @@ export default function MarketplaceScreen() {
     renewableOnly: false,
     radius: '50', // Default 50km radius for nearby
   });
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F9F9F9',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.screenPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    headerTitle: {
+      fontSize: 22 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    createButton: {
+      padding: responsive.cardPadding / 3,
+    },
+    searchBar: {
+      flexDirection: 'row',
+      padding: responsive.screenPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    searchInput: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F5F5F5',
+      borderRadius: 12,
+      paddingHorizontal: responsive.cardPadding,
+      marginRight: responsive.gridGap,
+    },
+    input: {
+      flex: 1,
+      paddingVertical: responsive.cardPadding,
+      paddingHorizontal: responsive.gridGap,
+      fontSize: 14 * responsive.fontScale,
+    },
+    filterButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: '#F5F5F5',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    filterBadge: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#FF6B6B',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: responsive.screenPadding * 2.5,
+    },
+    emptyTitle: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginTop: responsive.screenPadding,
+      marginBottom: responsive.gridGap,
+    },
+    emptyText: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#999',
+      textAlign: 'center',
+    },
+    listContent: {
+      padding: responsive.screenPadding,
+    },
+    listingCard: {
+      backgroundColor: '#FFF',
+      borderRadius: 16,
+      padding: responsive.cardPadding,
+      marginBottom: responsive.screenPadding,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: responsive.cardPadding,
+    },
+    sellerInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    sellerDetails: {
+      marginLeft: responsive.cardPadding,
+    },
+    sellerName: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    deviceName: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#999',
+      marginTop: 2,
+    },
+    certBadge: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: '#E8F5E9',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cardBody: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: responsive.cardPadding,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: '#F0F0F0',
+    },
+    energyInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    energyAmount: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginLeft: responsive.gridGap,
+    },
+    priceInfo: {
+      alignItems: 'flex-end',
+    },
+    priceLabel: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+      marginBottom: 2,
+    },
+    priceAmount: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#4CAF50',
+    },
+    totalPrice: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+      marginTop: 2,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: responsive.cardPadding,
+    },
+    typeChip: {
+      backgroundColor: '#E3F2FD',
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap / 1.5,
+      borderRadius: 12,
+    },
+    typeText: {
+      fontSize: 11 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#2196F3',
+      textTransform: 'capitalize',
+    },
+    availabilityText: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: '#FFF',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: responsive.screenPadding,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    modalTitle: {
+      fontSize: 20 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    filterScroll: {
+      padding: responsive.screenPadding,
+    },
+    filterLabel: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: responsive.cardPadding,
+      marginTop: responsive.gridGap,
+    },
+    rangeInputs: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: responsive.screenPadding,
+    },
+    rangeInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 8,
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap,
+      fontSize: 14 * responsive.fontScale,
+    },
+    rangeSeparator: {
+      marginHorizontal: responsive.cardPadding,
+      fontSize: 16 * responsive.fontScale,
+      color: '#999',
+    },
+    typeButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: responsive.gridGap,
+      marginBottom: responsive.screenPadding,
+    },
+    typeButton: {
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      backgroundColor: '#FFF',
+    },
+    typeButtonActive: {
+      backgroundColor: '#007AFF',
+      borderColor: '#007AFF',
+    },
+    typeButtonText: {
+      fontSize: 13 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#666',
+    },
+    typeButtonTextActive: {
+      color: '#FFF',
+    },
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: responsive.gridGap,
+    },
+    checkboxLabel: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#333',
+      marginLeft: responsive.cardPadding,
+    },
+    helperText: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#999',
+      marginTop: responsive.gridGap,
+      marginBottom: responsive.cardPadding,
+    },
+    viewModeContainer: {
+      flexDirection: 'row',
+      backgroundColor: '#FFF',
+      paddingHorizontal: responsive.screenPadding,
+      paddingBottom: responsive.gridGap * 1.5,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    viewModeTab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: responsive.cardPadding,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+    },
+    viewModeTabActive: {
+      borderBottomColor: '#007AFF',
+    },
+    viewModeText: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#999',
+      marginLeft: responsive.gridGap,
+    },
+    viewModeTextActive: {
+      color: '#007AFF',
+    },
+    distanceBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFEBEE',
+      paddingHorizontal: responsive.gridGap,
+      paddingVertical: responsive.gridGap / 2.5,
+      borderRadius: 12,
+      gap: responsive.gridGap / 2,
+    },
+    distanceText: {
+      fontSize: 11 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#FF6B6B',
+    },
+    modalActions: {
+      flexDirection: 'row',
+      padding: responsive.screenPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+      gap: responsive.cardPadding,
+    },
+    resetButton: {
+      flex: 1,
+      paddingVertical: responsive.cardPadding * 1.4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      alignItems: 'center',
+    },
+    resetButtonText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#666',
+    },
+    applyButton: {
+      flex: 1,
+      paddingVertical: responsive.cardPadding * 1.4,
+      borderRadius: 12,
+      backgroundColor: '#007AFF',
+      alignItems: 'center',
+    },
+    applyButtonText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#FFF',
+    },
+});
 
   useEffect(() => {
     requestLocationPermission();
@@ -227,7 +590,7 @@ export default function MarketplaceScreen() {
             {item.distance_km !== undefined && item.distance_km !== null && (
               <View style={styles.distanceBadge}>
                 <Ionicons name="location" size={12} color="#FF6B6B" />
-                <Text style={styles.distanceText}>{Number(item.distance_km).toFixed(1)} km</Text>
+                <Text style={styles.distanceText}>{safeToFixed(Number(item.distance_km), 1)} km</Text>
               </View>
             )}
           </View>
@@ -236,13 +599,13 @@ export default function MarketplaceScreen() {
         <View style={styles.cardBody}>
           <View style={styles.energyInfo}>
             <Ionicons name="flash" size={20} color="#FF9800" />
-            <Text style={styles.energyAmount}>{energyAmount.toFixed(2)} kWh</Text>
+            <Text style={styles.energyAmount}>{safeToFixed(energyAmount, 2)} kWh</Text>
           </View>
 
           <View style={styles.priceInfo}>
             <Text style={styles.priceLabel}>Price</Text>
-            <Text style={styles.priceAmount}>₹{pricePerKwh.toFixed(2)}/kWh</Text>
-            <Text style={styles.totalPrice}>Total: ₹{totalPrice.toFixed(2)}</Text>
+            <Text style={styles.priceAmount}>₹{safeToFixed(pricePerKwh, 2)}/kWh</Text>
+            <Text style={styles.totalPrice}>Total: ₹{safeToFixed(totalPrice, 2)}</Text>
           </View>
         </View>
 
@@ -509,364 +872,4 @@ export default function MarketplaceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-  },
-  createButton: {
-    padding: 4,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  searchInput: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    fontSize: 14,
-  },
-  filterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF6B6B',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-  },
-  listContent: {
-    padding: 16,
-  },
-  listingCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sellerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sellerDetails: {
-    marginLeft: 12,
-  },
-  sellerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  deviceName: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-  certBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  energyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  energyAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginLeft: 8,
-  },
-  priceInfo: {
-    alignItems: 'flex-end',
-  },
-  priceLabel: {
-    fontSize: 11,
-    color: '#999',
-    marginBottom: 2,
-  },
-  priceAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  totalPrice: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 2,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  typeChip: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  typeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#2196F3',
-    textTransform: 'capitalize',
-  },
-  availabilityText: {
-    fontSize: 11,
-    color: '#999',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  filterScroll: {
-    padding: 20,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  rangeInputs: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  rangeInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  rangeSeparator: {
-    marginHorizontal: 12,
-    fontSize: 16,
-    color: '#999',
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  typeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    backgroundColor: '#FFF',
-  },
-  typeButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  typeButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-  },
-  typeButtonTextActive: {
-    color: '#FFF',
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 12,
-  },
-  helperText: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  viewModeContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  viewModeTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  viewModeTabActive: {
-    borderBottomColor: '#007AFF',
-  },
-  viewModeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-    marginLeft: 8,
-  },
-  viewModeTextActive: {
-    color: '#007AFF',
-  },
-  distanceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFEBEE',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  distanceText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FF6B6B',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-    gap: 12,
-  },
-  resetButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    alignItems: 'center',
-  },
-  resetButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  applyButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-});
+

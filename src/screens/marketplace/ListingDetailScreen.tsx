@@ -18,6 +18,8 @@ import { paymentService } from '../../services/paymentService';
 import { notificationService } from '../../services/notificationService';
 import { useAuthStore } from '../../store/authStore';
 import { useWalletStore } from '../../store/walletStore';
+import { safeFormatCurrency, safeToFixed, safeCalculate } from '../../utils/formatters';
+import { useResponsive } from '../../hooks/useResponsive';
 
 interface ListingDetail {
   id: string;
@@ -50,6 +52,7 @@ interface PaymentMethod {
 }
 
 export default function ListingDetailScreen() {
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const route = useRoute();
   const { listingId } = route.params as { listingId: string };
@@ -63,6 +66,297 @@ export default function ListingDetailScreen() {
   const [purchaseAmount, setPurchaseAmount] = useState('');
   const [purchasing, setPurchasing] = useState(false);
   const [razorpayKey, setRazorpayKey] = useState<string>('');
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F9F9F9',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.screenPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    content: {
+      flex: 1,
+    },
+    sellerCard: {
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    sellerHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sellerInfo: {
+      marginLeft: responsive.screenPadding,
+      flex: 1,
+    },
+    sellerName: {
+      fontSize: 20 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginBottom: 4,
+    },
+    sellerEmail: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#666',
+    },
+    certBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#E8F5E9',
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap,
+      borderRadius: 20,
+      marginTop: responsive.cardPadding,
+      alignSelf: 'flex-start',
+    },
+    certText: {
+      fontSize: 13 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#4CAF50',
+      marginLeft: responsive.gridGap,
+    },
+    section: {
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      marginTop: responsive.cardPadding,
+    },
+    sectionTitle: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginBottom: responsive.screenPadding,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: responsive.screenPadding,
+    },
+    detailIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: '#F5F5F5',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: responsive.screenPadding,
+    },
+    detailInfo: {
+      flex: 1,
+    },
+    detailLabel: {
+      fontSize: 13 * responsive.fontScale,
+      color: '#666',
+      marginBottom: 4,
+    },
+    detailValue: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    footer: {
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+    },
+    priceFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: responsive.cardPadding,
+    },
+    footerLabel: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#666',
+    },
+    footerPrice: {
+      fontSize: 24 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#4CAF50',
+    },
+    buyButton: {
+      flexDirection: 'row',
+      backgroundColor: '#4CAF50',
+      paddingVertical: responsive.cardPadding * 1.6,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buyButtonText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#FFF',
+      marginLeft: responsive.gridGap,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: '#FFF',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '85%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: responsive.screenPadding,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    modalTitle: {
+      fontSize: 20 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    modalBody: {
+      padding: responsive.screenPadding,
+    },
+    inputLabel: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: responsive.gridGap,
+      marginTop: responsive.screenPadding,
+    },
+    walletCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F0F8FF',
+      padding: responsive.screenPadding,
+      borderRadius: 12,
+      marginBottom: responsive.screenPadding,
+      borderWidth: 1,
+      borderColor: '#007AFF',
+    },
+    walletInfo: {
+      flex: 1,
+      marginLeft: responsive.cardPadding,
+    },
+    walletLabel: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#666',
+    },
+    walletBalance: {
+      fontSize: 20 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#007AFF',
+      marginTop: 2,
+    },
+    topUpButton: {
+      backgroundColor: '#007AFF',
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.gridGap,
+      borderRadius: 8,
+    },
+    topUpText: {
+      color: '#FFF',
+      fontWeight: '600',
+      fontSize: 14 * responsive.fontScale,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 12,
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.cardPadding,
+      fontSize: 16 * responsive.fontScale,
+    },
+    inputHint: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#999',
+      marginTop: responsive.gridGap,
+    },
+    summaryCard: {
+      backgroundColor: '#F9F9F9',
+      padding: responsive.screenPadding,
+      borderRadius: 12,
+      marginTop: responsive.screenPadding * 2,
+    },
+    summaryTitle: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginBottom: responsive.cardPadding,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: responsive.gridGap,
+    },
+    summaryLabel: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#666',
+    },
+    summaryValue: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    summaryTotal: {
+      marginTop: responsive.gridGap,
+      paddingTop: responsive.cardPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#DDD',
+    },
+    totalLabel: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    totalValue: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#4CAF50',
+    },
+    modalFooter: {
+      padding: responsive.screenPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+    },
+    confirmButton: {
+      flexDirection: 'row',
+      backgroundColor: '#4CAF50',
+      paddingVertical: responsive.cardPadding * 1.6,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    confirmButtonText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#FFF',
+      marginLeft: responsive.gridGap,
+    },
+  });
 
   useEffect(() => {
     loadListingDetail();
@@ -130,7 +424,7 @@ export default function ListingDetailScreen() {
     if (walletBalance < totalCost) {
       Alert.alert(
         'Insufficient Balance',
-        `You need ₹${totalCost.toFixed(2)} but have ₹${walletBalance.toFixed(2)}. Would you like to top up?`,
+        `You need ₹${safeToFixed(totalCost, 2)} but have ₹${safeToFixed(walletBalance, 2)}. Would you like to top up?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { 
@@ -156,7 +450,7 @@ export default function ListingDetailScreen() {
       // Show success notification
       await notificationService.scheduleNotification(
         'Purchase Successful! ⚡',
-        `You bought ${amount} kWh of energy for ₹${totalCost.toFixed(2)}`,
+        `You bought ${amount} kWh of energy for ₹${safeToFixed(totalCost, 2)}`,
         { type: 'energy_purchase', amount: totalCost }
       );
 
@@ -165,7 +459,7 @@ export default function ListingDetailScreen() {
 
       Alert.alert(
         'Purchase Successful!',
-        `You have successfully purchased ${amount} kWh of energy for ₹${totalCost.toFixed(2)}.`,
+        `You have successfully purchased ${amount} kWh of energy for ₹${safeToFixed(totalCost, 2)}.`,
         [
           { text: 'View Transactions', onPress: () => navigation.navigate('Transactions' as never) },
           { text: 'OK', onPress: () => navigation.goBack() },
@@ -192,9 +486,9 @@ export default function ListingDetailScreen() {
     return null;
   }
 
-  const totalPrice = listing.energy_amount_kwh * (listing.price_per_kwh || 0);
+  const totalPrice = safeCalculate(listing.energy_amount_kwh, listing.price_per_kwh);
   const purchaseTotal = purchaseAmount
-    ? parseFloat(purchaseAmount) * (listing.price_per_kwh || 0)
+    ? safeCalculate(parseFloat(purchaseAmount), listing.price_per_kwh)
     : 0;
 
   return (
@@ -246,7 +540,7 @@ export default function ListingDetailScreen() {
             </View>
             <View style={styles.detailInfo}>
               <Text style={styles.detailLabel}>Price per kWh</Text>
-              <Text style={styles.detailValue}>₹{listing.price_per_kwh ? listing.price_per_kwh.toFixed(2) : 'N/A'}</Text>
+              <Text style={styles.detailValue}>{safeFormatCurrency(listing.price_per_kwh)}</Text>
             </View>
           </View>
 
@@ -256,7 +550,7 @@ export default function ListingDetailScreen() {
             </View>
             <View style={styles.detailInfo}>
               <Text style={styles.detailLabel}>Total Price</Text>
-              <Text style={styles.detailValue}>₹{isNaN(totalPrice) ? 'N/A' : totalPrice.toFixed(2)}</Text>
+              <Text style={styles.detailValue}>{safeFormatCurrency(totalPrice)}</Text>
             </View>
           </View>
 
@@ -299,7 +593,7 @@ export default function ListingDetailScreen() {
             <View style={styles.infoCard}>
               <Ionicons name="location" size={20} color="#666" />
               <Text style={styles.infoText}>
-                Location: {listing.location_lat.toFixed(4)}, {listing.location_lon.toFixed(4)}
+                Location: {safeToFixed(listing.location_lat, 4)}, {safeToFixed(listing.location_lon, 4)}
               </Text>
             </View>
           )}
@@ -310,7 +604,7 @@ export default function ListingDetailScreen() {
       <View style={styles.footer}>
         <View style={styles.priceFooter}>
           <Text style={styles.footerLabel}>Total Price</Text>
-          <Text style={styles.footerPrice}>₹{isNaN(totalPrice) ? 'N/A' : totalPrice.toFixed(2)}</Text>
+          <Text style={styles.footerPrice}>{safeFormatCurrency(totalPrice)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.buyButton, listing.status !== 'active' && styles.buyButtonDisabled]}
@@ -346,7 +640,7 @@ export default function ListingDetailScreen() {
                 <Ionicons name="wallet" size={24} color="#007AFF" />
                 <View style={styles.walletInfo}>
                   <Text style={styles.walletLabel}>Wallet Balance</Text>
-                  <Text style={styles.walletBalance}>₹{(wallet?.balance || 0).toFixed(2)}</Text>
+                  <Text style={styles.walletBalance}>₹{safeToFixed(wallet?.balance, 2)}</Text>
                 </View>
                 {wallet && wallet.balance < purchaseTotal && (
                   <TouchableOpacity 
@@ -384,15 +678,15 @@ export default function ListingDetailScreen() {
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Price per kWh</Text>
-                    <Text style={styles.summaryValue}>₹{listing.price_per_kwh ? listing.price_per_kwh.toFixed(2) : 'N/A'}</Text>
+                    <Text style={styles.summaryValue}>{safeFormatCurrency(listing.price_per_kwh)}</Text>
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Platform Fee (5%)</Text>
-                    <Text style={styles.summaryValue}>₹{isNaN(purchaseTotal) ? 'N/A' : (purchaseTotal * 0.05).toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>{safeFormatCurrency(purchaseTotal * 0.05)}</Text>
                   </View>
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total Amount</Text>
-                    <Text style={styles.totalValue}>₹{isNaN(purchaseTotal) ? 'N/A' : (purchaseTotal * 1.05).toFixed(2)}</Text>
+                    <Text style={styles.totalValue}>{safeFormatCurrency(purchaseTotal * 1.05)}</Text>
                   </View>
                 </View>
               )}
@@ -420,314 +714,3 @@ export default function ListingDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  content: {
-    flex: 1,
-  },
-  sellerCard: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  sellerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sellerInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  sellerName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-  },
-  sellerEmail: {
-    fontSize: 14,
-    color: '#666',
-  },
-  certBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 12,
-    alignSelf: 'flex-start',
-  },
-  certText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4CAF50',
-    marginLeft: 6,
-  },
-  section: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    marginTop: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  detailIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  detailInfo: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 12,
-    flex: 1,
-  },
-  footer: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  priceFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  footerLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  footerPrice: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  buyButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buyButtonDisabled: {
-    backgroundColor: '#CCC',
-  },
-  buyButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  modalBody: {
-    padding: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  walletCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F8FF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  walletInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  walletLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  walletBalance: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#007AFF',
-    marginTop: 2,
-  },
-  topUpButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  topUpText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  inputHint: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  summaryCard: {
-    backgroundColor: '#F9F9F9',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  summaryTotal: {
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#DDD',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  confirmButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  confirmButtonDisabled: {
-    backgroundColor: '#CCC',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-    marginLeft: 8,
-  },
-});

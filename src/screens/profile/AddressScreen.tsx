@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Animated, StyleSheet, Alert, 
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { profileApi } from '../../api/profileService';
+import AddAddressModal from './AddAddressModal';
 
 interface Address {
   id: string;
@@ -22,6 +23,7 @@ export default function AddressScreen() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     Animated.spring(slideAnim, {
@@ -68,8 +70,11 @@ export default function AddressScreen() {
   };
 
   const handleAddAddress = () => {
-    // TODO: Navigate to add address form
-    Alert.alert('Coming Soon', 'Address form will be available soon');
+    setShowAddModal(true);
+  };
+
+  const handleAddressAdded = () => {
+    loadAddresses();
   };
 
   if (loading) {
@@ -143,6 +148,12 @@ export default function AddressScreen() {
           <Text style={styles.addButtonText}>Add New Address</Text>
         </TouchableOpacity>
       </View>
+
+      <AddAddressModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAddressAdded={handleAddressAdded}
+      />
     </ScrollView>
   );
 }

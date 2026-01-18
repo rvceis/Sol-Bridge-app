@@ -12,6 +12,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { useResponsive } from '../../hooks/useResponsive';
+import { safeToFixed } from '../../utils/formatters';
 
 interface Transaction {
   id: string;
@@ -37,6 +39,7 @@ interface Transaction {
 }
 
 export default function TransactionHistoryScreen() {
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>('buyer');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -46,6 +49,234 @@ export default function TransactionHistoryScreen() {
     totalTransactions: 0,
     totalEnergy: 0,
     totalAmount: 0,
+  });
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F9F9F9',
+    },
+    header: {
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.screenPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    headerTitle: {
+      fontSize: 22 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    tabs: {
+      flexDirection: 'row',
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    tab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: responsive.screenPadding,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+    },
+    tabActive: {
+      borderBottomColor: '#007AFF',
+    },
+    tabText: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#999',
+      marginLeft: responsive.gridGap,
+    },
+    tabTextActive: {
+      color: '#007AFF',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    listContent: {
+      padding: responsive.screenPadding,
+    },
+    transactionCard: {
+      backgroundColor: '#FFF',
+      borderRadius: 16,
+      padding: responsive.screenPadding,
+      marginBottom: responsive.cardPadding,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: responsive.cardPadding,
+    },
+    partyInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    partyDetails: {
+      marginLeft: responsive.cardPadding,
+    },
+    partyLabel: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+      marginBottom: 2,
+    },
+    partyName: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: responsive.gridGap,
+      paddingVertical: responsive.gridGap / 1.5,
+      borderRadius: 12,
+    },
+    statusText: {
+      fontSize: 11 * responsive.fontScale,
+      fontWeight: '600',
+      marginLeft: responsive.gridGap / 2,
+      textTransform: 'capitalize',
+    },
+    cardBody: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: responsive.cardPadding,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: '#F0F0F0',
+    },
+    energyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    energyText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginLeft: responsive.gridGap,
+    },
+    priceRow: {
+      alignItems: 'flex-end',
+    },
+    priceLabel: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+      marginBottom: 2,
+    },
+    priceAmount: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#4CAF50',
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: responsive.cardPadding,
+      gap: responsive.cardPadding,
+    },
+    dateText: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+    },
+    deliveryBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#E8F5E9',
+      paddingHorizontal: responsive.gridGap,
+      paddingVertical: responsive.gridGap / 2.5,
+      borderRadius: 8,
+    },
+    deliveryText: {
+      fontSize: 10 * responsive.fontScale,
+      color: '#4CAF50',
+      fontWeight: '600',
+      marginLeft: responsive.gridGap / 2,
+    },
+    ratingBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFF8E1',
+      paddingHorizontal: responsive.gridGap,
+      paddingVertical: responsive.gridGap / 2.5,
+      borderRadius: 8,
+    },
+    ratingText: {
+      fontSize: 11 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#F57C00',
+      marginLeft: responsive.gridGap / 2,
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: responsive.screenPadding * 5,
+      paddingHorizontal: responsive.screenPadding * 2.5,
+    },
+    emptyTitle: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginTop: responsive.screenPadding,
+      marginBottom: responsive.gridGap,
+    },
+    emptyText: {
+      fontSize: 14 * responsive.fontScale,
+      color: '#999',
+      textAlign: 'center',
+      marginBottom: responsive.screenPadding * 1.5,
+    },
+    emptyButton: {
+      backgroundColor: '#007AFF',
+      paddingHorizontal: responsive.screenPadding * 1.5,
+      paddingVertical: responsive.cardPadding,
+      borderRadius: 12,
+    },
+    emptyButtonText: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#FFF',
+    },
+    statsBar: {
+      flexDirection: 'row',
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+    },
+    stat: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statLabel: {
+      fontSize: 11 * responsive.fontScale,
+      color: '#999',
+      marginBottom: responsive.gridGap,
+    },
+    statValue: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: '#EEE',
+      marginHorizontal: responsive.gridGap,
+    },
   });
 
   useEffect(() => {
@@ -160,7 +391,7 @@ export default function TransactionHistoryScreen() {
           <View style={styles.energyRow}>
             <Ionicons name="flash" size={20} color="#FF9800" />
             <Text style={styles.energyText}>
-              {item.energy_amount_kwh.toFixed(2)} kWh
+              {safeToFixed(item.energy_amount_kwh, 2)} kWh
             </Text>
           </View>
 
@@ -169,7 +400,7 @@ export default function TransactionHistoryScreen() {
               {isBuyer ? 'Total Paid' : 'Earned'}
             </Text>
             <Text style={styles.priceAmount}>
-              ₹{isBuyer ? item.total_price.toFixed(2) : (item.total_price - item.platform_fee).toFixed(2)}
+              ₹{isBuyer ? safeToFixed(item.total_price, 2) : safeToFixed(item.total_price - item.platform_fee, 2)}
             </Text>
           </View>
         </View>
@@ -187,7 +418,7 @@ export default function TransactionHistoryScreen() {
             <View style={styles.deliveryBadge}>
               <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
               <Text style={styles.deliveryText}>
-                {item.energy_delivered_kwh.toFixed(2)} kWh delivered
+                {safeToFixed(item.energy_delivered_kwh, 2)} kWh delivered
               </Text>
             </View>
           )}
@@ -195,7 +426,7 @@ export default function TransactionHistoryScreen() {
           {item.rating && (
             <View style={styles.ratingBadge}>
               <Ionicons name="star" size={14} color="#FFD700" />
-              <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingText}>{safeToFixed(item.rating, 1)}</Text>
             </View>
           )}
         </View>
@@ -301,9 +532,8 @@ export default function TransactionHistoryScreen() {
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Total Energy</Text>
             <Text style={styles.statValue}>
-              {transactions
-                .reduce((sum, t) => sum + t.energy_amount_kwh, 0)
-                .toFixed(1)}{' '}
+              {safeToFixed(transactions
+                .reduce((sum, t) => sum + t.energy_amount_kwh, 0), 1)}{' '}
               kWh
             </Text>
           </View>
@@ -314,13 +544,12 @@ export default function TransactionHistoryScreen() {
             </Text>
             <Text style={styles.statValue}>
               ₹
-              {transactions
+              {safeToFixed(transactions
                 .reduce(
                   (sum, t) =>
                     sum + (activeTab === 'buyer' ? t.total_price : t.total_price - t.platform_fee),
                   0
-                )
-                .toFixed(2)}
+                ), 2)}
             </Text>
           </View>
         </View>
@@ -329,230 +558,3 @@ export default function TransactionHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-  },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: '#007AFF',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-    marginLeft: 8,
-  },
-  tabTextActive: {
-    color: '#007AFF',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    padding: 16,
-  },
-  transactionCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  partyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  partyDetails: {
-    marginLeft: 12,
-  },
-  partyLabel: {
-    fontSize: 11,
-    color: '#999',
-    marginBottom: 2,
-  },
-  partyName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 4,
-    textTransform: 'capitalize',
-  },
-  cardBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  energyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  energyText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginLeft: 8,
-  },
-  priceRow: {
-    alignItems: 'flex-end',
-  },
-  priceLabel: {
-    fontSize: 11,
-    color: '#999',
-    marginBottom: 2,
-  },
-  priceAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 12,
-  },
-  dateText: {
-    fontSize: 11,
-    color: '#999',
-  },
-  deliveryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  deliveryText: {
-    fontSize: 10,
-    color: '#4CAF50',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF8E1',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  ratingText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#F57C00',
-    marginLeft: 4,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  emptyButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  emptyButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  statsBar: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#999',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#EEE',
-    marginHorizontal: 8,
-  },
-});

@@ -9,6 +9,7 @@ import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import useConsumptionForecast from '../../hooks/useConsumptionForecast';
+import { safeToFixed } from '../../utils/formatters';
 
 const screenWidth = Dimensions.get('window').width;
 

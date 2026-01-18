@@ -93,6 +93,7 @@ const RoleCard: React.FC<{
         { transform: [{ scale: scaleAnim }] },
         isSelected && styles.cardSelected,
       ]}
+      key={role.id}
     >
       <TouchableOpacity
         style={styles.card}

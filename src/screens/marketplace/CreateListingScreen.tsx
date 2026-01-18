@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { useResponsive } from '../../hooks/useResponsive';
+import { safeToFixed } from '../../utils/formatters';
 
 interface Device {
   device_id: string;
@@ -22,6 +24,7 @@ interface Device {
 }
 
 export default function CreateListingScreen() {
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -39,6 +42,222 @@ export default function CreateListingScreen() {
   const [renewableCert, setRenewableCert] = useState(false);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#F9F9F9',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.screenPadding,
+      backgroundColor: '#FFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEE',
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontSize: 18 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    content: {
+      flex: 1,
+    },
+    section: {
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      marginTop: responsive.cardPadding,
+    },
+    sectionTitle: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginBottom: responsive.screenPadding,
+    },
+    deviceOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: responsive.screenPadding,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 12,
+      marginBottom: responsive.cardPadding,
+    },
+    deviceOptionSelected: {
+      borderColor: '#007AFF',
+      backgroundColor: '#F0F8FF',
+    },
+    deviceInfo: {
+      flex: 1,
+      marginLeft: responsive.screenPadding,
+    },
+    deviceName: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    deviceType: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#666',
+      marginTop: 2,
+      textTransform: 'capitalize',
+    },
+    label: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: responsive.gridGap,
+      marginTop: responsive.cardPadding,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 12,
+      paddingHorizontal: responsive.screenPadding,
+      backgroundColor: '#FFF',
+    },
+    input: {
+      flex: 1,
+      paddingVertical: responsive.cardPadding,
+      paddingHorizontal: responsive.cardPadding,
+      fontSize: 16 * responsive.fontScale,
+    },
+    calculator: {
+      backgroundColor: '#F9F9F9',
+      padding: responsive.screenPadding,
+      borderRadius: 12,
+      marginTop: responsive.screenPadding,
+    },
+    calculatorTitle: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+      marginBottom: responsive.cardPadding,
+    },
+    calcRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: responsive.gridGap,
+    },
+    calcLabel: {
+      fontSize: 13 * responsive.fontScale,
+      color: '#666',
+    },
+    calcValue: {
+      fontSize: 13 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    calcTotal: {
+      marginTop: responsive.gridGap,
+      paddingTop: responsive.cardPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#DDD',
+    },
+    calcTotalLabel: {
+      fontSize: 15 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#333',
+    },
+    calcTotalValue: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#4CAF50',
+    },
+    typeButtons: {
+      flexDirection: 'row',
+      gap: responsive.cardPadding,
+    },
+    typeButton: {
+      flex: 1,
+      paddingVertical: responsive.cardPadding,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      backgroundColor: '#FFF',
+      alignItems: 'center',
+    },
+    typeButtonActive: {
+      backgroundColor: '#007AFF',
+      borderColor: '#007AFF',
+    },
+    typeButtonText: {
+      fontSize: 13 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#666',
+    },
+    typeButtonTextActive: {
+      color: '#FFF',
+    },
+    dateButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 12,
+      paddingHorizontal: responsive.screenPadding,
+      paddingVertical: responsive.cardPadding * 1.4,
+      marginBottom: responsive.cardPadding,
+    },
+    dateText: {
+      flex: 1,
+      fontSize: 14 * responsive.fontScale,
+      color: '#333',
+      marginLeft: responsive.cardPadding,
+    },
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    checkboxContent: {
+      flex: 1,
+      marginLeft: responsive.cardPadding,
+    },
+    checkboxLabel: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+    },
+    checkboxDesc: {
+      fontSize: 12 * responsive.fontScale,
+      color: '#666',
+      marginTop: 2,
+    },
+    footer: {
+      backgroundColor: '#FFF',
+      padding: responsive.screenPadding,
+      borderTopWidth: 1,
+      borderTopColor: '#EEE',
+    },
+    createButton: {
+      flexDirection: 'row',
+      backgroundColor: '#4CAF50',
+      paddingVertical: responsive.cardPadding * 1.6,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    createButtonDisabled: {
+      backgroundColor: '#CCC',
+    },
+    createButtonText: {
+      fontSize: 16 * responsive.fontScale,
+      fontWeight: '700',
+      color: '#FFF',
+      marginLeft: responsive.gridGap,
+    },
+  });
 
   useEffect(() => {
     loadUserDevices();
@@ -251,15 +470,15 @@ export default function CreateListingScreen() {
               <Text style={styles.calculatorTitle}>Earnings Calculator</Text>
               <View style={styles.calcRow}>
                 <Text style={styles.calcLabel}>Total Price</Text>
-                <Text style={styles.calcValue}>₹{calculateTotalPrice().toFixed(2)}</Text>
+                <Text style={styles.calcValue}>₹{safeToFixed(calculateTotalPrice(), 2)}</Text>
               </View>
               <View style={styles.calcRow}>
                 <Text style={styles.calcLabel}>Platform Fee (5%)</Text>
-                <Text style={styles.calcValue}>-₹{calculatePlatformFee().toFixed(2)}</Text>
+                <Text style={styles.calcValue}>-₹{safeToFixed(calculatePlatformFee(), 2)}</Text>
               </View>
               <View style={[styles.calcRow, styles.calcTotal]}>
                 <Text style={styles.calcTotalLabel}>You'll Earn</Text>
-                <Text style={styles.calcTotalValue}>₹{calculateSellerEarnings().toFixed(2)}</Text>
+                <Text style={styles.calcTotalValue}>₹{safeToFixed(calculateSellerEarnings(), 2)}</Text>
               </View>
             </View>
           )}
@@ -387,218 +606,3 @@ export default function CreateListingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9F9F9',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    marginTop: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 16,
-  },
-  deviceOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  deviceOptionSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#F0F8FF',
-  },
-  deviceInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  deviceName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  deviceType: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    textTransform: 'capitalize',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFF',
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    fontSize: 16,
-  },
-  calculator: {
-    backgroundColor: '#F9F9F9',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 16,
-  },
-  calculatorTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
-  },
-  calcRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  calcLabel: {
-    fontSize: 13,
-    color: '#666',
-  },
-  calcValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-  },
-  calcTotal: {
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#DDD',
-  },
-  calcTotalLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
-  },
-  calcTotalValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    backgroundColor: '#FFF',
-    alignItems: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  typeButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-  },
-  typeButtonTextActive: {
-    color: '#FFF',
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  dateText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 12,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkboxContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  checkboxDesc: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  footer: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-  },
-  createButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  createButtonDisabled: {
-    backgroundColor: '#CCC',
-  },
-  createButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-    marginLeft: 8,
-  },
-});

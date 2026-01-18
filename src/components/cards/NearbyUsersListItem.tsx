@@ -7,6 +7,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { safeToFixed } from '../../utils/formatters';
 
 export interface NearbyUserListItem {
   id: string;
@@ -118,7 +119,7 @@ const NearbyUsersListItem: React.FC<NearbyUsersListItemProps> = ({
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={14} color={getRatingColor(user.average_rating)} />
               <Text style={[styles.rating, { color: getRatingColor(user.average_rating) }]}>
-                {user.average_rating.toFixed(1)}
+                {safeToFixed(user.average_rating, 1)}
               </Text>
               <Text style={styles.ratingLabel}>
                 ({user.completed_transactions})
@@ -142,7 +143,7 @@ const NearbyUsersListItem: React.FC<NearbyUsersListItemProps> = ({
             />
           </View>
           <Text style={[styles.distance, { color: getDistanceColor(user.distance_km) }]}>
-            {user.distance_km.toFixed(1)}
+            {safeToFixed(user.distance_km, 1)}
           </Text>
           <Text style={styles.distanceUnit}>km</Text>
         </View>
@@ -161,8 +162,8 @@ const NearbyUsersListItem: React.FC<NearbyUsersListItemProps> = ({
           <Text style={styles.metricLabel}>Available</Text>
           <Text style={styles.metricValue}>
             {user.available_energy_kwh > 1000
-              ? (user.available_energy_kwh / 1000).toFixed(1)
-              : user.available_energy_kwh.toFixed(0)}
+              ? safeToFixed(user.available_energy_kwh / 1000, 1)
+              : safeToFixed(user.available_energy_kwh, 0)}
           </Text>
           <Text style={styles.metricUnit}>
             {user.available_energy_kwh > 1000 ? 'MWh' : 'kWh'}
