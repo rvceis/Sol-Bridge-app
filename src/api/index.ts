@@ -37,6 +37,14 @@ export type {
   PaymentCallbackData,
 } from './walletService';
 
+export { default as mlService } from './mlService';
+export type {
+  SolarForecast,
+  ConsumptionForecast,
+  PricingRecommendation,
+  AnomalyAlert,
+} from './mlService';
+
 // Re-export types for convenience
 export type {
   User,

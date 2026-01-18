@@ -12,6 +12,10 @@ export type { NearbyUserListItem as NearbyUserListItemType } from './cards/Nearb
 // Charts
 export { default as DemandPredictionChart } from './charts/DemandPredictionChart';
 
+// ML/AI Components
+export { default as SolarForecastCard } from './SolarForecastCard';
+export { default as ConsumptionForecastCard } from './ConsumptionForecastCard';
+
 // Common
 export { default as DemandClusterMap } from './common/DemandClusterMap';
 

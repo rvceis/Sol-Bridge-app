@@ -5,60 +5,70 @@
 
 import { Platform } from 'react-native';
 
-// Your machine's IP address for physical device testing
-const LOCAL_IP = '10.251.149.193';
+// Environment - use REACT_APP_ENV or NODE_ENV
+const CURRENT_ENV = process.env.REACT_APP_ENV || process.env.NODE_ENV || 'development';
 
-// Determine correct localhost URL based on platform
-const getDevBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    return 'http://localhost:3000/api/v1';
-  } else if (Platform.OS === 'android') {
-    // Use actual IP for physical devices, 10.0.2.2 for emulator
-    return `http://${LOCAL_IP}:3000/api/v1`;
-  } else {
-    return 'http://localhost:3000/api/v1'; // iOS simulator
-  }
+// Backend API URLs - Update these for your deployment
+const BACKEND_URLS = {
+  // Development (local)
+  development: {
+    base: process.env.REACT_APP_API_URL || 'http://localhost:3000',
+    mlService: process.env.REACT_APP_ML_URL || 'http://localhost:8001',
+  },
+  // Staging
+  staging: {
+    base: process.env.REACT_APP_API_URL || 'https://staging-api.solarsharing.com',
+    mlService: process.env.REACT_APP_ML_URL || 'https://staging-ml.solarsharing.com',
+  },
+  // Production
+  production: {
+    base: process.env.REACT_APP_API_URL || 'https://api.solarsharing.com',
+    mlService: process.env.REACT_APP_ML_URL || 'https://ml.solarsharing.com',
+  },
 };
+
+const getEnvironment = () => {
+  if (CURRENT_ENV.includes('prod')) return 'production';
+  if (CURRENT_ENV.includes('staging')) return 'staging';
+  return 'development';
+};
+
+const env = getEnvironment();
+const backends = BACKEND_URLS[env];
 
 // API Base URL - Change this for different environments
 export const API_CONFIG = {
   // Development (local)
   development: {
-    baseUrl: getDevBaseUrl(),
+    baseUrl: `${backends.base}/api/v1`,
+    mlServiceUrl: `${backends.mlService}/api/v1`,
     timeout: 30000,
   },
 
   // Staging
   staging: {
-    baseUrl: 'https://staging-api.solarsharing.com/api/v1',
+    baseUrl: `${backends.base}/api/v1`,
+    mlServiceUrl: `${backends.mlService}/api/v1`,
     timeout: 30000,
   },
 
   // Production
   production: {
-    baseUrl: 'https://api.solarsharing.com/api/v1',
+    baseUrl: `${backends.base}/api/v1`,
+    mlServiceUrl: `${backends.mlService}/api/v1`,
     timeout: 30000,
   },
 };
 
-// Current environment - check __DEV__ global (React Native/Expo)
-let isDev = true;
-try {
-  // @ts-ignore
-  isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : true;
-} catch (e) {
-  isDev = true;
-}
-
-const ENV = isDev ? 'development' : 'production';
-
 // Export current config
-export const API_BASE_URL = API_CONFIG[ENV].baseUrl;
-export const API_TIMEOUT = API_CONFIG[ENV].timeout;
+export const API_BASE_URL = API_CONFIG[env].baseUrl;
+export const ML_SERVICE_URL = API_CONFIG[env].mlServiceUrl;
+export const API_TIMEOUT = API_CONFIG[env].timeout;
 
 // Debug log
-console.log('[Config] Environment:', ENV);
+console.log('[Config] Environment:', env);
 console.log('[Config] API Base URL:', API_BASE_URL);
+console.log('[Config] ML Service URL:', ML_SERVICE_URL);
 console.log('[Config] Platform:', Platform.OS);
 
 // API Endpoints
@@ -149,6 +159,7 @@ export const testConnection = async (): Promise<boolean> => {
 
 export default {
   API_BASE_URL,
+  ML_SERVICE_URL,
   API_TIMEOUT,
   ENDPOINTS,
   STORAGE_KEYS,
