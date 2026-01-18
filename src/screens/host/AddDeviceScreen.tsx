@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.error.light,
+    backgroundColor: colors.error.main,
     borderLeftWidth: 4,
     borderLeftColor: colors.error.main,
     borderRadius: 8,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.textStyles.body,
-    color: colors.error.main,
+    color: colors.neutral.white,
     flex: 1,
   },
   label: {

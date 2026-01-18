@@ -540,14 +540,14 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.error.light,
+    backgroundColor: colors.error.main,
     padding: spacing.md,
     borderRadius: 12,
     gap: spacing.sm,
   },
   errorText: {
     ...typography.textStyles.bodySmall,
-    color: colors.error.main,
+    color: colors.neutral.white,
     flex: 1,
   },
   inputContainer: {
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   },
   fieldError: {
     ...typography.textStyles.caption,
-    color: colors.error.main,
+    color: colors.neutral.white,
     marginTop: spacing.xs,
     marginLeft: spacing.sm,
   },

@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
   warningCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#FF9800',
     padding: 14,
     borderRadius: 10,
     marginTop: 16,
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   warningText: {
     flex: 1,
     fontSize: 13,
-    color: '#E65100',
+    color: '#FFFFFF',
     lineHeight: 18,
   },
 });
