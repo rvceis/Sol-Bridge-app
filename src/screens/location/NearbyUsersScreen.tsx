@@ -226,8 +226,30 @@ export default function NearbyUsersScreen() {
           `Contact this ${item.role}?`,
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'View Profile', onPress: () => {} },
-            { text: 'Start Chat', onPress: () => {} },
+            {
+              text: 'View Profile',
+              onPress: () => {
+                // Navigate to a public user profile view
+                // Pass minimal params to render without additional fetch
+                // If a detailed profile screen exists later, it can consume userId
+                // @ts-ignore - stack route provided in DiscoveryNavigator
+                navigation.navigate('UserProfile' as never, {
+                  userId: item.id,
+                  user: item,
+                } as never);
+              },
+            },
+            {
+              text: 'Start Chat',
+              onPress: () => {
+                // Navigate to chat screen placeholder with this user
+                // @ts-ignore - stack route provided in DiscoveryNavigator
+                navigation.navigate('Chat' as never, {
+                  userId: item.id,
+                  name: item.full_name,
+                } as never);
+              },
+            },
           ]
         );
       }}
