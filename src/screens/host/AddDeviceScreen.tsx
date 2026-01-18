@@ -30,6 +30,7 @@ type NavigationProp = NativeStackNavigationProp<DeviceStackParamList, 'AddDevice
 
 const DEVICE_TYPES = [
   { label: 'Solar Meter', value: 'solar_meter' },
+  { label: 'Solar Panel (device)', value: 'solar_panel' },
   { label: 'Consumption Meter', value: 'consumption_meter' },
   { label: 'Battery BMS', value: 'battery_bms' },
   { label: 'Weather Station', value: 'weather_station' },
@@ -86,7 +87,9 @@ const AddDeviceScreen: React.FC = () => {
     }
 
     clearError();
-    const success = await createDevice(deviceType, deviceModel || undefined, firmwareVersion || undefined);
+    // Map solar_panel to solar_meter for backend compatibility
+    const submitType = deviceType === 'solar_panel' ? 'solar_meter' : deviceType;
+    const success = await createDevice(submitType, deviceModel || undefined, firmwareVersion || undefined);
 
     if (success) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -251,7 +254,7 @@ const AddDeviceScreen: React.FC = () => {
               color={colors.info.main}
             />
             <Text style={styles.infoText}>
-              Device type is required. Model and firmware details help us provide better support and monitoring.
+              Device type is required. Selecting "Solar Panel (device)" registers it like a solar meter but specifies the panel.
             </Text>
           </View>
 

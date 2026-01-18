@@ -66,6 +66,7 @@ export default function ListingDetailScreen() {
   const [purchaseAmount, setPurchaseAmount] = useState('');
   const [purchasing, setPurchasing] = useState(false);
   const [razorpayKey, setRazorpayKey] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'upi' | 'card' | 'netbanking'>('wallet');
 
   const styles = StyleSheet.create({
     container: {
@@ -356,6 +357,41 @@ export default function ListingDetailScreen() {
       color: '#FFF',
       marginLeft: responsive.gridGap,
     },
+    paymentMethodsRow: {
+      marginTop: responsive.screenPadding,
+      gap: responsive.gridGap,
+    },
+    paymentMethodsTitle: {
+      fontSize: 14 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#333',
+      marginBottom: responsive.gridGap,
+    },
+    methodsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: responsive.gridGap,
+    },
+    methodChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#DDD',
+      backgroundColor: '#FFF',
+      gap: 6,
+    },
+    methodChipActive: {
+      borderColor: '#4CAF50',
+      backgroundColor: '#E8F5E9',
+    },
+    methodText: {
+      fontSize: 13 * responsive.fontScale,
+      color: '#333',
+      fontWeight: '600',
+    },
   });
 
   useEffect(() => {
@@ -419,6 +455,16 @@ export default function ListingDetailScreen() {
 
     const totalCost = amount * (listing?.price_per_kwh || 0);
     const walletBalance = wallet?.balance || 0;
+
+    // Non-wallet payment methods are for display only right now
+    if (paymentMethod !== 'wallet') {
+      const pretty = paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Card' : 'NetBanking';
+      Alert.alert(
+        `${pretty} Coming Soon`,
+        `Payment via ${pretty} will be available shortly. Please use Wallet for now.`
+      );
+      return;
+    }
 
     // Check if sufficient balance
     if (walletBalance < totalCost) {
@@ -668,6 +714,44 @@ export default function ListingDetailScreen() {
                 Available: {listing.energy_amount_kwh} kWh
               </Text>
 
+              {/* Payment Methods (display only) */}
+              <View style={styles.paymentMethodsRow}>
+                <Text style={styles.paymentMethodsTitle}>Payment Method</Text>
+                <View style={styles.methodsGrid}>
+                  <TouchableOpacity
+                    style={[styles.methodChip, paymentMethod === 'wallet' && styles.methodChipActive]}
+                    onPress={() => setPaymentMethod('wallet')}
+                  >
+                    <Ionicons name="wallet" size={16} color={paymentMethod === 'wallet' ? '#4CAF50' : '#666'} />
+                    <Text style={styles.methodText}>Wallet</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.methodChip, paymentMethod === 'upi' && styles.methodChipActive]}
+                    onPress={() => setPaymentMethod('upi')}
+                  >
+                    <Ionicons name="logo-google" size={16} color={paymentMethod === 'upi' ? '#4CAF50' : '#666'} />
+                    <Text style={styles.methodText}>UPI</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.methodChip, paymentMethod === 'card' && styles.methodChipActive]}
+                    onPress={() => setPaymentMethod('card')}
+                  >
+                    <Ionicons name="card" size={16} color={paymentMethod === 'card' ? '#4CAF50' : '#666'} />
+                    <Text style={styles.methodText}>Card</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.methodChip, paymentMethod === 'netbanking' && styles.methodChipActive]}
+                    onPress={() => setPaymentMethod('netbanking')}
+                  >
+                    <Ionicons name="business" size={16} color={paymentMethod === 'netbanking' ? '#4CAF50' : '#666'} />
+                    <Text style={styles.methodText}>NetBanking</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               {/* Summary */}
               {purchaseAmount && parseFloat(purchaseAmount) > 0 && (
                 <View style={styles.summaryCard}>
@@ -703,7 +787,11 @@ export default function ListingDetailScreen() {
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                    <Text style={styles.confirmButtonText}>Confirm Purchase</Text>
+                    <Text style={styles.confirmButtonText}>
+                      {paymentMethod === 'wallet' ? 'Pay with Wallet' :
+                       paymentMethod === 'upi' ? 'Pay via UPI' :
+                       paymentMethod === 'card' ? 'Pay by Card' : 'Pay via NetBanking'}
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
