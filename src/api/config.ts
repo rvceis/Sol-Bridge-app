@@ -4,26 +4,40 @@
  */
 
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-// Environment - use REACT_APP_ENV or NODE_ENV
-const CURRENT_ENV = process.env.REACT_APP_ENV || process.env.NODE_ENV || 'development';
+// Get environment variables from Expo Constants (works in React Native)
+const getEnvVar = (key: string, defaultValue: string = '') => {
+  // For native builds, use Constants.expoConfig.extra
+  if (Constants.expoConfig?.extra?.[key]) {
+    return Constants.expoConfig.extra[key];
+  }
+  // Fallback to process.env for web
+  if (typeof process !== 'undefined' && process.env?.[key]) {
+    return process.env[key];
+  }
+  return defaultValue;
+};
 
-// Backend API URLs - Update these for your deployment
+// Environment - use EXPO_PUBLIC_ENV or default to development
+const CURRENT_ENV = getEnvVar('EXPO_PUBLIC_ENV', 'development');
+
+// Backend API URLs - HARDCODED for mobile app reliability
 const BACKEND_URLS = {
-  // Development (local)
+  // Development (local) - Using Render backend for consistency
   development: {
-    base: process.env.REACT_APP_API_URL || 'https://sol-bridge.onrender.com',
-    mlService: process.env.REACT_APP_ML_URL || 'http://localhost:8001',
+    base: 'https://sol-bridge.onrender.com',
+    mlService: 'http://localhost:8001',
   },
   // Staging
   staging: {
-    base: process.env.REACT_APP_API_URL || 'https://staging-api.solarsharing.com',
-    mlService: process.env.REACT_APP_ML_URL || 'https://staging-ml.solarsharing.com',
+    base: 'https://staging-api.solarsharing.com',
+    mlService: 'https://staging-ml.solarsharing.com',
   },
   // Production
   production: {
-    base: process.env.REACT_APP_API_URL || 'https://api.solarsharing.com',
-    mlService: process.env.REACT_APP_ML_URL || 'https://ml.solarsharing.com',
+    base: 'https://sol-bridge.onrender.com',  // Using your deployed backend
+    mlService: 'https://ml.solarsharing.com',
   },
 };
 
@@ -35,6 +49,14 @@ const getEnvironment = () => {
 
 const env = getEnvironment();
 const backends = BACKEND_URLS[env];
+
+// Debug logging for mobile apps
+console.log('=== API CONFIG DEBUG ===');
+console.log('Environment:', env);
+console.log('Platform:', Platform.OS);
+console.log('Backend Base URL:', backends.base);
+console.log('Backend ML URL:', backends.mlService);
+console.log('=======================');
 
 // API Base URL - Change this for different environments
 export const API_CONFIG = {
@@ -96,6 +118,17 @@ export const ENDPOINTS = {
     history: '/iot/history',
     deviceCommand: '/iot/device-command',
     registerDevice: '/iot/devices',
+  },
+
+  // ML Predictions
+  ml: {
+    solarForecast: '/predict/solar-generation',
+    demandForecast: '/predict/consumption',
+    dynamicPricing: '/predict/pricing',
+    anomalyDetection: '/predict/anomalies',
+    equipmentFailure: '/predict/equipment-failure',
+    marketplaceMatching: '/matching/find-matches',
+    riskScoring: '/predict/investor-risk',
   },
 
   // Wallet & Transactions

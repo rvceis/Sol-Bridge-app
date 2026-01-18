@@ -1,0 +1,81 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="panelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#skyGrad)" rx="180"/>
+  
+  <!-- Sun -->
+  <circle cx="512" cy="300" r="140" fill="url(#sunGrad)"/>
+  
+  <!-- Sun rays -->
+  <line x1="512" y1="100" x2="512" y2="160" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="512" y1="440" x2="512" y2="500" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="312" y1="300" x2="372" y2="300" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="652" y1="300" x2="712" y2="300" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="372" y1="160" x2="420" y2="208" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="604" y1="392" x2="652" y2="440" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="652" y1="160" x2="604" y2="208" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  <line x1="420" y1="392" x2="372" y2="440" stroke="#fbbf24" stroke-width="20" stroke-linecap="round"/>
+  
+  <!-- Solar panels (3x2 grid) -->
+  <g transform="translate(232, 550)">
+    <!-- Panel 1 -->
+    <rect x="0" y="0" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="0" y1="40" x2="160" y2="40" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="0" y1="80" x2="160" y2="80" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="53" y1="0" x2="53" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="107" y1="0" x2="107" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    
+    <!-- Panel 2 -->
+    <rect x="180" y="0" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="180" y1="40" x2="340" y2="40" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="180" y1="80" x2="340" y2="80" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="233" y1="0" x2="233" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="287" y1="0" x2="287" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    
+    <!-- Panel 3 -->
+    <rect x="360" y="0" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="360" y1="40" x2="520" y2="40" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="360" y1="80" x2="520" y2="80" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="413" y1="0" x2="413" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="467" y1="0" x2="467" y2="120" stroke="#3b82f6" stroke-width="2"/>
+    
+    <!-- Panel 4 -->
+    <rect x="0" y="140" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="0" y1="180" x2="160" y2="180" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="0" y1="220" x2="160" y2="220" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="53" y1="140" x2="53" y2="260" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="107" y1="140" x2="107" y2="260" stroke="#3b82f6" stroke-width="2"/>
+    
+    <!-- Panel 5 -->
+    <rect x="180" y="140" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="180" y1="180" x2="340" y2="180" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="180" y1="220" x2="340" y2="220" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="233" y1="140" x2="233" y2="260" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="287" y1="140" x2="287" y2="260" stroke="#3b82f6" stroke-width="2"/>
+    
+    <!-- Panel 6 -->
+    <rect x="360" y="140" width="160" height="120" fill="url(#panelGrad)" stroke="#60a5fa" stroke-width="4" rx="8"/>
+    <line x1="360" y1="180" x2="520" y2="180" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="360" y1="220" x2="520" y2="220" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="413" y1="140" x2="413" y2="260" stroke="#3b82f6" stroke-width="2"/>
+    <line x1="467" y1="140" x2="467" y2="260" stroke="#3b82f6" stroke-width="2"/>
+  </g>
+  
+  <!-- Energy flow indicator (lightning bolt) -->
+  <path d="M 512 850 L 480 900 L 510 900 L 490 950 L 534 900 L 504 900 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="3"/>
+</svg>

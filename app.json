@@ -24,6 +24,8 @@
       "package": "com.solarsharing.app",
       "versionCode": 1,
       "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
@@ -37,6 +39,13 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d0285e3f-bdb4-40e0-8624-712bc48dbdd3"
+      },
+      "EXPO_PUBLIC_ENV": "production",
+      "EXPO_PUBLIC_API_URL": "https://sol-bridge.onrender.com"
+    }
   }
 }
