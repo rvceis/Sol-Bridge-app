@@ -11,13 +11,11 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Dimensions,
   StatusBar,
   FlatList,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography, gradients } from '../../theme';
@@ -29,13 +27,13 @@ import {
   isCredit,
 } from '../../store';
 import { Transaction } from '../../types';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../../hooks/useResponsive';
 
 type FilterType = 'all' | 'credit' | 'debit';
 
 const WalletScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
+  const responsive = useResponsive();
+  const { insets } = responsive;
   const navigation = useNavigation();
 
   const wallet = useWalletStore((state) => state.wallet);

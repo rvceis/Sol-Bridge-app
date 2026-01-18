@@ -11,27 +11,25 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Dimensions,
   StatusBar,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { DeviceStackParamList } from '../../navigation/DeviceStackNavigator';
 import { colors, spacing, typography, gradients } from '../../theme';
 import { useDeviceStore, useAuthStore } from '../../store';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../../hooks/useResponsive';
 
 type NavigationProp = NativeStackNavigationProp<DeviceStackParamList>;
 
 const DeviceManagementScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
+  const responsive = useResponsive();
+  const { insets } = responsive;
   const navigation = useNavigation<NavigationProp>();
 
   const user = useAuthStore((state) => state.user);

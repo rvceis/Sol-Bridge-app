@@ -11,13 +11,14 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Dimensions,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+
+const { width } = Dimensions.get('window');
 import { colors, spacing, typography, gradients } from '../../theme';
 import {
   useAuthStore,
@@ -26,8 +27,7 @@ import {
   formatPower,
   formatEnergy,
 } from '../../store';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../../hooks/useResponsive';
 
 const timeRanges: { key: TimeRange; label: string }[] = [
   { key: 'today', label: 'Today' },
@@ -66,7 +66,8 @@ const ChartBar: React.FC<{
 };
 
 const EnergyScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
+  const responsive = useResponsive();
+  const { insets } = responsive;
 
   const user = useAuthStore((state) => state.user);
   const isHost = user?.role === 'host';

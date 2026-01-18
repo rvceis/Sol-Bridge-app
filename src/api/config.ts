@@ -26,7 +26,8 @@ const CURRENT_ENV = getEnvVar('EXPO_PUBLIC_ENV', 'development');
 const BACKEND_URLS = {
   // Development (local) - Using Render backend for consistency
   development: {
-    base: 'https://sol-bridge.onrender.com',
+    // base: 'https://sol-bridge.onrender.com',
+     base: 'http://localhost:3000',
     mlService: 'http://localhost:8001',
   },
   // Staging

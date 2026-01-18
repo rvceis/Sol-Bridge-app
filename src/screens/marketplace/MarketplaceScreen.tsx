@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { useResponsive } from '../../hooks/useResponsive';
 
 interface Listing {
   id: string;
@@ -33,10 +34,11 @@ interface Listing {
   renewable_cert: boolean;
   location_lat?: number;
   location_lon?: number;
-  distance_km?: number; // For nearby listings
+  distance_km?: number;
 }
 
 export default function MarketplaceScreen() {
+  const responsive = useResponsive();
   const navigation = useNavigation();
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);

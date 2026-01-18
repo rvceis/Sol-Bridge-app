@@ -14,7 +14,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.solarsharing.app"
+      "bundleIdentifier": "com.solarsharing.app",
+      "requireFullScreen": false
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.solarsharing.app",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
@@ -32,7 +33,8 @@
         "WRITE_EXTERNAL_STORAGE"
       ],
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "screenOrientation": "portrait"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,6 +48,7 @@
       },
       "EXPO_PUBLIC_ENV": "production",
       "EXPO_PUBLIC_API_URL": "https://sol-bridge.onrender.com"
+      
     }
   }
 }

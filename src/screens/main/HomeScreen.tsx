@@ -11,19 +11,17 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Dimensions,
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, gradients } from '../../theme';
 import { useAuthStore, useEnergyStore, useWalletStore, formatPower, formatCurrency } from '../../store';
-
-const { width } = Dimensions.get('window');
+import { useResponsive } from '../../hooks/useResponsive';
 
 const HomeScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
+  const responsive = useResponsive();
+  const { insets } = responsive;
 
   const user = useAuthStore((state) => state.user);
   const isHost = user?.role === 'host';
@@ -448,9 +446,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   actionCard: {
-    width: (width - spacing.lg * 2 - spacing.md) / 2 - spacing.md / 2,
+    width: 'calc(50% - ' + spacing.md / 2 + 'px)', // Dynamic width for 2-column grid
     backgroundColor: colors.background.primary,
     borderRadius: 16,
     padding: spacing.md,
