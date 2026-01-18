@@ -28,6 +28,7 @@ import {
   formatEnergy,
 } from '../../store';
 import { useResponsive } from '../../hooks/useResponsive';
+import { safeToFixed } from '../../utils/formatters';
 
 const timeRanges: { key: TimeRange; label: string }[] = [
   { key: 'today', label: 'Today' },
@@ -259,7 +260,7 @@ const EnergyScreen: React.FC = () => {
             <View style={[styles.statIcon, { backgroundColor: colors.secondary.light }]}>
               <Ionicons name="speedometer" size={20} color={colors.secondary.main} />
             </View>
-            <Text style={styles.statValue}>{stats.avgEfficiency.toFixed(1)}%</Text>
+            <Text style={styles.statValue}>{safeToFixed(stats.avgEfficiency, 1)}%</Text>
             <Text style={styles.statLabel}>Avg Efficiency</Text>
           </View>
 
@@ -268,7 +269,7 @@ const EnergyScreen: React.FC = () => {
               <Ionicons name="leaf" size={20} color={colors.info.main} />
             </View>
             <Text style={styles.statValue}>
-              {((stats.totalProduced * 0.85) / 1000).toFixed(1)} kg
+              {safeToFixed((stats.totalProduced * 0.85) / 1000, 1)} kg
             </Text>
             <Text style={styles.statLabel}>CO₂ Saved</Text>
           </View>
@@ -301,25 +302,25 @@ const EnergyScreen: React.FC = () => {
               <View style={styles.deviceStatItem}>
                 <Text style={styles.deviceStatLabel}>Voltage</Text>
                 <Text style={styles.deviceStatValue}>
-                  {latestReading?.voltage?.toFixed(1) || '0'} V
+                  {safeToFixed(latestReading?.voltage, 1) || '0'} V
                 </Text>
               </View>
               <View style={styles.deviceStatItem}>
                 <Text style={styles.deviceStatLabel}>Current</Text>
                 <Text style={styles.deviceStatValue}>
-                  {latestReading?.current?.toFixed(2) || '0'} A
+                  {safeToFixed(latestReading?.current, 2) || '0'} A
                 </Text>
               </View>
               <View style={styles.deviceStatItem}>
                 <Text style={styles.deviceStatLabel}>Temperature</Text>
                 <Text style={styles.deviceStatValue}>
-                  {latestReading?.temperature?.toFixed(1) || '0'}°C
+                  {safeToFixed(latestReading?.temperature, 1) || '0'}°C
                 </Text>
               </View>
               <View style={styles.deviceStatItem}>
                 <Text style={styles.deviceStatLabel}>Battery</Text>
                 <Text style={styles.deviceStatValue}>
-                  {latestReading?.batteryLevel?.toFixed(0) || '0'}%
+                  {safeToFixed(latestReading?.batteryLevel, 0) || '0'}%
                 </Text>
               </View>
             </View>

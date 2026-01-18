@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { locationApi } from '../../api/locationService';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { safeToFixed } from '../../utils/formatters';
 
 interface Allocation {
   listing_id: string;
@@ -145,7 +146,7 @@ export default function SmartAllocationScreen() {
 
     Alert.alert(
       'Confirm Purchase',
-      `Buy ${result.allocated_energy.toFixed(2)} kWh from ${result.summary.num_sellers} sellers for ₹${result.summary.grand_total.toFixed(2)}?`,
+      `Buy ${safeToFixed(result.allocated_energy, 2)} kWh from ${result.summary.num_sellers} sellers for ₹${safeToFixed(result.summary.grand_total, 2)}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -164,7 +165,7 @@ export default function SmartAllocationScreen() {
 
               Alert.alert(
                 'Purchase Successful! 🎉',
-                `You've purchased ${result.allocated_energy.toFixed(2)} kWh of energy`,
+                `You've purchased ${safeToFixed(result.allocated_energy, 2)} kWh of energy`,
                 [{ text: 'View Transactions', onPress: () => navigation.goBack() }]
               );
               setResult(null);
@@ -202,7 +203,7 @@ export default function SmartAllocationScreen() {
       <View style={styles.allocDetails}>
         <View style={styles.allocDetail}>
           <Ionicons name="flash" size={16} color="#FF9800" />
-          <Text style={styles.allocDetailValue}>{alloc.energy_kwh.toFixed(2)} kWh</Text>
+          <Text style={styles.allocDetailValue}>{safeToFixed(alloc.energy_kwh, 2)} kWh</Text>
         </View>
         <View style={styles.allocDetail}>
           <Ionicons name="cash" size={16} color="#4CAF50" />
@@ -222,7 +223,7 @@ export default function SmartAllocationScreen() {
 
       <View style={styles.allocTotal}>
         <Text style={styles.allocTotalLabel}>Total:</Text>
-        <Text style={styles.allocTotalValue}>₹{alloc.total_price.toFixed(2)}</Text>
+        <Text style={styles.allocTotalValue}>₹{safeToFixed(alloc.total_price, 2)}</Text>
       </View>
     </View>
   );
@@ -348,7 +349,7 @@ export default function SmartAllocationScreen() {
                 <View style={styles.summaryItem}>
                   <Text style={styles.summaryLabel}>Allocated</Text>
                   <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
-                    {result.allocated_energy.toFixed(2)} kWh
+                    {safeToFixed(result.allocated_energy, 2)} kWh
                   </Text>
                 </View>
                 <View style={styles.summaryItem}>
@@ -414,7 +415,7 @@ export default function SmartAllocationScreen() {
               <View style={styles.warningCard}>
                 <Ionicons name="warning" size={20} color="#FF9800" />
                 <Text style={styles.warningText}>
-                  Could not find enough energy. {result.remaining_energy.toFixed(2)} kWh still needed. Try increasing the search radius.
+                  Could not find enough energy. {safeToFixed(result.remaining_energy, 2)} kWh still needed. Try increasing the search radius.
                 </Text>
               </View>
             )}

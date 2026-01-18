@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { locationApi } from '../../api/locationService';
+import { safeToFixed } from '../../utils/formatters';
 
 const { width } = Dimensions.get('window');
 
@@ -136,7 +137,7 @@ const SellerReliabilityCard: React.FC<SellerReliabilityCardProps> = ({
             <Text style={styles.metricLabel}>Completion</Text>
           </View>
           <Text style={styles.metricValue}>
-            {data.completion_rate.toFixed(1)}%
+            {safeToFixed(data.completion_rate, 1)}%
           </Text>
           <Text style={styles.metricSubtext}>
             {data.total_transactions} transactions
@@ -150,7 +151,7 @@ const SellerReliabilityCard: React.FC<SellerReliabilityCardProps> = ({
             <Text style={styles.metricLabel}>Cancelled</Text>
           </View>
           <Text style={styles.metricValue}>
-            {data.cancellation_rate.toFixed(1)}%
+            {safeToFixed(data.cancellation_rate, 1)}%
           </Text>
           <Text style={styles.metricSubtext}>of orders</Text>
         </View>
@@ -162,7 +163,7 @@ const SellerReliabilityCard: React.FC<SellerReliabilityCardProps> = ({
             <Text style={styles.metricLabel}>Disputes</Text>
           </View>
           <Text style={styles.metricValue}>
-            {data.dispute_rate.toFixed(1)}%
+            {safeToFixed(data.dispute_rate, 1)}%
           </Text>
           <Text style={styles.metricSubtext}>disputed</Text>
         </View>
@@ -173,7 +174,7 @@ const SellerReliabilityCard: React.FC<SellerReliabilityCardProps> = ({
             <Ionicons name="star" size={20} color="#fbbf24" />
             <Text style={styles.metricLabel}>Rating</Text>
           </View>
-          <Text style={styles.metricValue}>{data.avg_rating.toFixed(1)}</Text>
+          <Text style={styles.metricValue}>{safeToFixed(data.avg_rating, 1)}</Text>
           <Text style={styles.metricSubtext}>out of 5</Text>
         </View>
       </View>
@@ -182,7 +183,7 @@ const SellerReliabilityCard: React.FC<SellerReliabilityCardProps> = ({
       <View style={styles.completionTime}>
         <Ionicons name="time" size={18} color="#6366f1" />
         <Text style={styles.completionTimeText}>
-          Avg completion time: <Text style={styles.bold}>{data.avg_completion_hours.toFixed(1)}h</Text>
+          Avg completion time: <Text style={styles.bold}>{safeToFixed(data.avg_completion_hours, 1)}h</Text>
         </Text>
       </View>
 

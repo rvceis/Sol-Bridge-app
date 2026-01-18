@@ -16,6 +16,7 @@ import PanelHealthCard from './components/PanelHealthCard';
 import ConsumptionForecast from './components/ConsumptionForecast';
 import PerformanceMetrics from './components/PerformanceMetrics';
 import AnomalyAlerts from './components/AnomalyAlerts';
+import { safeToFixed } from '../../utils/formatters';
 
 /**
  * InsightsScreen: AI/ML Predictions and Analytics Dashboard
@@ -198,17 +199,17 @@ const InsightsScreen = ({ navigation }: any) => {
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <Ionicons name="flash" size={32} color="#FF9800" />
-            <Text style={styles.metricValue}>{todayGeneration.toFixed(2)}</Text>
+            <Text style={styles.metricValue}>{safeToFixed(todayGeneration, 2)}</Text>
             <Text style={styles.metricLabel}>kW Now</Text>
           </View>
           <View style={styles.metricCard}>
             <Ionicons name="trending-up" size={32} color="#4CAF50" />
-            <Text style={styles.metricValue}>{weeklyGeneration.toFixed(1)}</Text>
+            <Text style={styles.metricValue}>{safeToFixed(weeklyGeneration, 1)}</Text>
             <Text style={styles.metricLabel}>kWh This Week</Text>
           </View>
           <View style={styles.metricCard}>
             <Ionicons name="speedometer" size={32} color="#2196F3" />
-            <Text style={styles.metricValue}>{efficiency.toFixed(0)}%</Text>
+            <Text style={styles.metricValue}>{safeToFixed(efficiency, 0)}%</Text>
             <Text style={styles.metricLabel}>Efficiency</Text>
           </View>
         </View>
@@ -221,7 +222,7 @@ const InsightsScreen = ({ navigation }: any) => {
             <Text style={styles.sectionTitle}>Panel Output Forecast</Text>
             <View style={styles.confidenceBadge}>
               <Text style={styles.confidenceText}>
-                {(panelConfidence * 100).toFixed(0)}% confidence
+                {safeToFixed(panelConfidence * 100, 0)}% confidence
               </Text>
             </View>
           </View>
@@ -240,7 +241,7 @@ const InsightsScreen = ({ navigation }: any) => {
                     ]}
                   />
                 </View>
-                <Text style={styles.forecastValue}>{prediction.predicted.toFixed(1)} kWh</Text>
+                <Text style={styles.forecastValue}>{safeToFixed(prediction.predicted, 1)} kWh</Text>
               </View>
             ))}
           </View>
@@ -266,7 +267,7 @@ const InsightsScreen = ({ navigation }: any) => {
                     ]}
                   />
                 </View>
-                <Text style={styles.forecastValue}>{prediction.predicted.toFixed(1)} kWh</Text>
+                <Text style={styles.forecastValue}>{safeToFixed(prediction.predicted, 1)} kWh</Text>
               </View>
             ))}
           </View>

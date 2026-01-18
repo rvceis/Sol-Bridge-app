@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { safeToFixed } from '../../utils/formatters';
 
 const { width } = Dimensions.get('window');
 
@@ -170,18 +171,18 @@ const DemandPredictionChart: React.FC<DemandPredictionChartProps> = ({
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Avg Daily</Text>
-          <Text style={styles.statValue}>{stats.daily_avg.toFixed(0)}</Text>
+          <Text style={styles.statValue}>{safeToFixed(stats.daily_avg, 0)}</Text>
           <Text style={styles.statUnit}>kWh</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Std Dev</Text>
-          <Text style={styles.statValue}>{stats.standard_deviation.toFixed(1)}</Text>
+          <Text style={styles.statValue}>{safeToFixed(stats.standard_deviation, 1)}</Text>
           <Text style={styles.statUnit}>kWh</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Price Range</Text>
           <Text style={styles.statValue}>
-            ${stats.price_range[0].toFixed(2)}-${stats.price_range[1].toFixed(2)}
+            ${safeToFixed(stats.price_range[0], 2)}-${safeToFixed(stats.price_range[1], 2)}
           </Text>
           <Text style={styles.statUnit}>per kWh</Text>
         </View>
@@ -237,7 +238,7 @@ const DemandPredictionChart: React.FC<DemandPredictionChartProps> = ({
 
               {/* Energy Value */}
               <Text style={styles.energyValue}>
-                {prediction.predicted_energy_kwh.toFixed(0)}
+                {safeToFixed(prediction.predicted_energy_kwh, 0)}
               </Text>
 
               {/* Day Label */}
@@ -247,7 +248,7 @@ const DemandPredictionChart: React.FC<DemandPredictionChartProps> = ({
 
               {/* Price */}
               <Text style={styles.priceLabel}>
-                ${prediction.price_forecast.toFixed(2)}
+                ${safeToFixed(prediction.price_forecast, 2)}
               </Text>
             </View>
           );
@@ -291,7 +292,7 @@ const DemandPredictionChart: React.FC<DemandPredictionChartProps> = ({
                 <View style={styles.insightText}>
                   <Text style={styles.insightLabel}>Peak Demand</Text>
                   <Text style={styles.insightValue}>
-                    {highest.predicted_energy_kwh.toFixed(0)} kWh on {highest.day_of_week}
+                    {safeToFixed(highest.predicted_energy_kwh, 0)} kWh on {highest.day_of_week}
                   </Text>
                 </View>
               </View>
@@ -301,7 +302,7 @@ const DemandPredictionChart: React.FC<DemandPredictionChartProps> = ({
                 <View style={styles.insightText}>
                   <Text style={styles.insightLabel}>Lowest Demand</Text>
                   <Text style={styles.insightValue}>
-                    {lowest.predicted_energy_kwh.toFixed(0)} kWh on {lowest.day_of_week}
+                    {safeToFixed(lowest.predicted_energy_kwh, 0)} kWh on {lowest.day_of_week}
                   </Text>
                 </View>
               </View>

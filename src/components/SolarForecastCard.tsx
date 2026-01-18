@@ -9,6 +9,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import useSolarForecast from '../../hooks/useSolarForecast';
+import { safeToFixed } from '../../utils/formatters';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -97,7 +98,7 @@ const SolarForecastCard: React.FC<SolarForecastCardProps> = ({
         <View style={styles.metaItem}>
           <Text style={styles.metaLabel}>Confidence</Text>
           <Text style={styles.metaValue}>
-            {(forecast.confidence * 100).toFixed(0)}%
+            {safeToFixed(forecast.confidence * 100, 0)}%
           </Text>
         </View>
         <View style={styles.metaItem}>
@@ -153,11 +154,11 @@ const SolarForecastCard: React.FC<SolarForecastCardProps> = ({
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Total Forecast</Text>
-          <Text style={styles.statValue}>{totalForecast.toFixed(1)} kWh</Text>
+          <Text style={styles.statValue}>{safeToFixed(totalForecast, 1)} kWh</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Daily Average</Text>
-          <Text style={styles.statValue}>{avgDaily.toFixed(1)} kWh</Text>
+          <Text style={styles.statValue}>{safeToFixed(avgDaily, 1)} kWh</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Capacity</Text>
@@ -189,7 +190,7 @@ const SolarForecastCard: React.FC<SolarForecastCardProps> = ({
                   ]}
                 />
               </View>
-              <Text style={styles.dailyValue}>{day.predicted.toFixed(1)} kWh</Text>
+              <Text style={styles.dailyValue}>{safeToFixed(day.predicted, 1)} kWh</Text>
             </View>
           );
         })}

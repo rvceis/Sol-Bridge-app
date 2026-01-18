@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography } from '../../theme';
-import { useAuthStore } from '../../store';
+import { useAuthStore, resetProfileSelection } from '../../store';
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -75,6 +75,7 @@ const ProfileScreen: React.FC = () => {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const forceReonboard = resetProfileSelection;
 
   const getRoleIcon = (): keyof typeof Ionicons.glyphMap => {
     switch (user?.role) {
@@ -125,6 +126,10 @@ const ProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
+            // Force onboarding/role selection on next launch
+            await forceReonboard();
+            // Optionally navigate to auth stack root
+            (navigation as any).reset({ index: 0, routes: [{ name: 'Auth' }] });
           },
         },
       ]

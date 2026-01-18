@@ -12,6 +12,7 @@ export {
   selectAuthError,
   selectIsOnboarded,
   selectUserRole,
+  resetProfileSelection,
 } from './authStore';
 export type { AuthStatus } from './authStore';
 

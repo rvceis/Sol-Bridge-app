@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { locationApi } from '../../api/locationService';
+import { safeToFixed } from '../../utils/formatters';
 
 const { width } = Dimensions.get('window');
 
@@ -82,6 +83,13 @@ export default function NearbyUsersScreen() {
         longitude: loc.coords.longitude,
       });
       setLocationError(null);
+
+      // Also push location to backend so others can discover this user
+      try {
+        await locationApi.updateLocation(loc.coords.latitude, loc.coords.longitude);
+      } catch (err) {
+        console.warn('Warning: failed to sync location to backend', err);
+      }
     } catch (error) {
       console.error('Error getting location:', error);
       setLocationError('Failed to get your location. Please try again.');
@@ -104,7 +112,70 @@ export default function NearbyUsersScreen() {
         types
       );
 
-      setUsers(response.data || []);
+      // Backend sometimes wraps results as { success, data } or returns raw array
+      const candidates =
+        response?.data?.data ??
+        response?.data ??
+        response?.users ??
+        response;
+
+      let parsed = Array.isArray(candidates)
+        ? candidates
+        : Array.isArray(candidates?.data)
+        ? candidates.data
+        : Array.isArray(candidates?.users)
+        ? candidates.users
+        : [];
+
+      // If nothing returned, try a wider radius once
+      if ((!parsed || parsed.length === 0) && radius < 200) {
+        const retryResponse = await locationApi.getNearbyUsers(
+          location.latitude,
+          location.longitude,
+          200,
+          types
+        );
+
+        const retryCandidates =
+          retryResponse?.data?.data ??
+          retryResponse?.data ??
+          retryResponse?.users ??
+          retryResponse;
+
+        parsed = Array.isArray(retryCandidates)
+          ? retryCandidates
+          : Array.isArray(retryCandidates?.data)
+          ? retryCandidates.data
+          : Array.isArray(retryCandidates?.users)
+          ? retryCandidates.users
+          : [];
+      }
+
+      // Last-resort: if still empty, retry without type filter (backend defaults)
+      if (!parsed || parsed.length === 0) {
+        const fallbackResponse = await locationApi.getNearbyUsers(
+          location.latitude,
+          location.longitude,
+          200,
+          []
+        );
+
+        const fallbackCandidates =
+          fallbackResponse?.data?.data ??
+          fallbackResponse?.data ??
+          fallbackResponse?.users ??
+          fallbackResponse;
+
+        parsed = Array.isArray(fallbackCandidates)
+          ? fallbackCandidates
+          : Array.isArray(fallbackCandidates?.data)
+          ? fallbackCandidates.data
+          : Array.isArray(fallbackCandidates?.users)
+          ? fallbackCandidates.users
+          : [];
+      }
+
+      setUsers(parsed);
     } catch (error: any) {
       console.error('Error loading nearby users:', error);
       Alert.alert('Error', 'Failed to load nearby users');
@@ -193,7 +264,7 @@ export default function NearbyUsersScreen() {
         </View>
 
         <View style={styles.distanceContainer}>
-          <Text style={styles.distanceValue}>{Number(item.distance_km || 0).toFixed(1)}</Text>
+          <Text style={styles.distanceValue}>{safeToFixed(Number(item.distance_km || 0), 1)}</Text>
           <Text style={styles.distanceUnit}>km</Text>
         </View>
       </View>
@@ -203,7 +274,7 @@ export default function NearbyUsersScreen() {
           <>
             <View style={styles.statItem}>
               <Ionicons name="flash" size={16} color="#FF9800" />
-              <Text style={styles.statValue}>{Number(item.available_energy_kwh || 0).toFixed(0)} kWh</Text>
+              <Text style={styles.statValue}>{safeToFixed(Number(item.available_energy_kwh || 0), 0)} kWh</Text>
               <Text style={styles.statLabel}>Available</Text>
             </View>
             <View style={styles.statDivider} />
@@ -226,7 +297,7 @@ export default function NearbyUsersScreen() {
         <View style={styles.statItem}>
           <Ionicons name="star" size={16} color="#FFD700" />
           <Text style={styles.statValue}>
-            {Number(item.average_rating || 0).toFixed(1)}
+            {safeToFixed(Number(item.average_rating || 0), 1)}
           </Text>
           <Text style={styles.statLabel}>Rating</Text>
         </View>

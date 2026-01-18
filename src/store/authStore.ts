@@ -26,6 +26,7 @@ interface AuthState {
   updateUser: (userData: Partial<User>) => Promise<boolean>;
   setUser: (user: User | null) => void;
   setOnboarded: (value: boolean) => void;
+  resetProfileSelection: () => Promise<void>;
   clearError: () => void;
   checkAuthStatus: () => Promise<void>;
 }
@@ -108,6 +109,22 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             status: 'unauthenticated',
             error: null,
+            // Reset onboarding so user can re-select profile after logout
+            isOnboarded: false,
+          });
+        }
+      },
+
+      // Force user to re-select profile/onboarding
+      resetProfileSelection: async (): Promise<void> => {
+        try {
+          await authService.logout();
+        } finally {
+          set({
+            user: null,
+            status: 'unauthenticated',
+            error: null,
+            isOnboarded: false,
           });
         }
       },
@@ -212,3 +229,7 @@ export const selectIsLoading = (state: AuthState) => state.status === 'loading';
 export const selectAuthError = (state: AuthState) => state.error;
 export const selectIsOnboarded = (state: AuthState) => state.isOnboarded;
 export const selectUserRole = (state: AuthState) => state.user?.role;
+
+// Convenience helper to trigger re-onboarding from anywhere
+export const resetProfileSelection: () => Promise<void> = () =>
+  useAuthStore.getState().resetProfileSelection();

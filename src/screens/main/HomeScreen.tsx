@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, gradients } from '../../theme';
 import { useAuthStore, useEnergyStore, useWalletStore, formatPower, formatCurrency } from '../../store';
 import { useResponsive } from '../../hooks/useResponsive';
+import { safeToFixed } from '../../utils/formatters';
 
 const HomeScreen: React.FC = () => {
   const responsive = useResponsive();
@@ -217,7 +218,7 @@ const HomeScreen: React.FC = () => {
             <View style={[styles.summaryCard, { backgroundColor: colors.primary.ultraLight }]}>
               <Ionicons name="sunny-outline" size={24} color={colors.primary.main} />
               <Text style={styles.summaryValue}>
-                {dailySummary?.totalGeneration?.toFixed(1) || '0'} kWh
+                {safeToFixed(dailySummary?.totalGeneration, 1) || '0'} kWh
               </Text>
               <Text style={styles.summaryLabel}>
                 {isHost ? 'Produced' : 'Purchased'}
@@ -237,7 +238,7 @@ const HomeScreen: React.FC = () => {
             <View style={[styles.summaryCard, { backgroundColor: colors.secondary.ultraLight }]}>
               <Ionicons name="flash-outline" size={24} color={colors.secondary.main} />
               <Text style={styles.summaryValue}>
-                {dailySummary?.peakPower?.toFixed(1) || '0'} kW
+                {safeToFixed(dailySummary?.peakPower, 1) || '0'} kW
               </Text>
               <Text style={styles.summaryLabel}>Peak Power</Text>
             </View>

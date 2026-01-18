@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { safeToFixed } from '../../../utils/formatters';
 import apiClient from '../../api/client';
 
 /**
@@ -184,17 +185,17 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ onRefresh }) =>
         </View>
         <View style={styles.metricBox}>
           <Ionicons name="sunny" size={28} color="#FFC107" />
-          <Text style={styles.metricValue}>{metrics.dailyGeneration.toFixed(1)}</Text>
+          <Text style={styles.metricValue}>{safeToFixed(metrics.dailyGeneration, 1)}</Text>
           <Text style={styles.metricLabel}>kWh Today</Text>
         </View>
         <View style={styles.metricBox}>
           <Ionicons name="trending-up" size={28} color="#4CAF50" />
-          <Text style={styles.metricValue}>{metrics.weeklyGeneration.toFixed(1)}</Text>
+          <Text style={styles.metricValue}>{safeToFixed(metrics.weeklyGeneration, 1)}</Text>
           <Text style={styles.metricLabel}>kWh Week</Text>
         </View>
         <View style={styles.metricBox}>
           <Ionicons name="speedometer" size={28} color="#2196F3" />
-          <Text style={styles.metricValue}>{metrics.efficiency.toFixed(0)}</Text>
+          <Text style={styles.metricValue}>{safeToFixed(metrics.efficiency, 0)}</Text>
           <Text style={styles.metricLabel}>% Efficiency</Text>
         </View>
       </View>
@@ -208,7 +209,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ onRefresh }) =>
             <View style={styles.projectedContent}>
               <Text style={styles.projectedLabel}>This Month</Text>
               <Text style={styles.projectedValue}>
-                {metrics.estimatedMonthlyOutput.toFixed(1)} kWh
+                {safeToFixed(metrics.estimatedMonthlyOutput, 1)} kWh
               </Text>
             </View>
           </View>
@@ -217,7 +218,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ onRefresh }) =>
             <View style={styles.projectedContent}>
               <Text style={styles.projectedLabel}>CO₂ Offset</Text>
               <Text style={styles.projectedValue}>
-                {metrics.co2Saved.toFixed(1)} kg
+                {safeToFixed(metrics.co2Saved, 1)} kg
               </Text>
             </View>
           </View>
@@ -239,7 +240,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ onRefresh }) =>
               ]}
             />
           </View>
-          <Text style={styles.gaugeText}>{metrics.efficiency.toFixed(1)}%</Text>
+          <Text style={styles.gaugeText}>{safeToFixed(metrics.efficiency, 1)}%</Text>
         </View>
         <View style={styles.gaugeLabels}>
           <Text style={styles.gaugeLabel}>0%</Text>

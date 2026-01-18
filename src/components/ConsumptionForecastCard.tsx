@@ -121,11 +121,11 @@ const ConsumptionForecastCard: React.FC<ConsumptionForecastCardProps> = ({
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Total Forecast</Text>
-          <Text style={styles.statValue}>{forecast.totalPredicted.toFixed(1)} kWh</Text>
+          <Text style={styles.statValue}>{safeToFixed(forecast.totalPredicted, 1)} kWh</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Daily Average</Text>
-          <Text style={styles.statValue}>{avgDaily.toFixed(1)} kWh</Text>
+          <Text style={styles.statValue}>{safeToFixed(avgDaily, 1)} kWh</Text>
         </View>
         {forecast.metadata.householdSize && (
           <View style={styles.statBox}>
@@ -160,7 +160,7 @@ const ConsumptionForecastCard: React.FC<ConsumptionForecastCardProps> = ({
                   ]}
                 />
               </View>
-              <Text style={styles.dailyValue}>{day.predicted.toFixed(1)} kWh</Text>
+              <Text style={styles.dailyValue}>{safeToFixed(day.predicted, 1)} kWh</Text>
             </View>
           );
         })}

@@ -3,12 +3,21 @@ import apiClient from './client';
 // Location & AI Optimization API
 export const locationApi = {
   // Get nearby users (sellers, investors, hosters)
-  getNearbyUsers: async (latitude: number, longitude: number, radius: number = 50, types: string[] = ['seller', 'investor', 'hoster']) => {
+  getNearbyUsers: async (
+    latitude: number,
+    longitude: number,
+    radius: number = 50,
+    types: string[] = ['seller', 'investor', 'hoster']
+  ) => {
+    // Map frontend roles to backend expectations
+    const mappedTypes = types.map((t) => (t === 'hoster' ? 'host' : t));
     const params = new URLSearchParams({
       latitude: latitude.toString(),
       longitude: longitude.toString(),
       radius: radius.toString(),
-      types: types.join(','),
+      types: mappedTypes.join(','),
+      roles: mappedTypes.join(','), // backend compatibility
+      type: mappedTypes[0] || 'seller', // fallback param name some APIs use
     });
     const response = await apiClient.get(`/location/nearby-users?${params.toString()}`);
     return response.data;
