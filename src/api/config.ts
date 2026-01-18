@@ -12,7 +12,7 @@ const CURRENT_ENV = process.env.REACT_APP_ENV || process.env.NODE_ENV || 'develo
 const BACKEND_URLS = {
   // Development (local)
   development: {
-    base: process.env.REACT_APP_API_URL || 'http://localhost:3000',
+    base: process.env.REACT_APP_API_URL || 'https://sol-bridge.onrender.com',
     mlService: process.env.REACT_APP_ML_URL || 'http://localhost:8001',
   },
   // Staging
