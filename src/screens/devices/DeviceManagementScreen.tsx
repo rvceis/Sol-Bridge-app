@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { useAuthStore } from '../../store';
 
 interface Device {
   device_id: string;
@@ -25,6 +26,11 @@ interface Device {
   installation_date?: string;
   status?: string;
   created_at: string;
+  metadata?: {
+    manufacturer?: string;
+    serial_number?: string;
+    location?: string;
+  };
 }
 
 const DEVICE_TYPES = [
@@ -39,6 +45,9 @@ const DEVICE_TYPES = [
 
 export default function DeviceManagementScreen() {
   const navigation = useNavigation();
+  const user = useAuthStore((state) => state.user);
+  const canManageDevices = user?.role === 'host' || user?.role === 'buyer';
+  
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,6 +60,10 @@ export default function DeviceManagementScreen() {
   const [deviceType, setDeviceType] = useState('solar_panel');
   const [capacity, setCapacity] = useState('');
   const [efficiency, setEfficiency] = useState('');
+  const [manufacturer, setManufacturer] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [installationDate, setInstallationDate] = useState('');
+  const [location, setLocation] = useState('');
 
   useEffect(() => {
     loadDevices();
@@ -78,6 +91,10 @@ export default function DeviceManagementScreen() {
     setDeviceType('solar_panel');
     setCapacity('');
     setEfficiency('');
+    setManufacturer('');
+    setSerialNumber('');
+    setInstallationDate('');
+    setLocation('');
     setEditingDevice(null);
   };
 
@@ -92,6 +109,10 @@ export default function DeviceManagementScreen() {
     setDeviceType(device.device_type);
     setCapacity(device.capacity_kwh?.toString() || '');
     setEfficiency(device.efficiency_rating?.toString() || '');
+    setManufacturer(device.metadata?.manufacturer || '');
+    setSerialNumber(device.metadata?.serial_number || '');
+    setInstallationDate(device.installation_date || '');
+    setLocation(device.metadata?.location || '');
     setModalVisible(true);
   };
 
@@ -108,6 +129,12 @@ export default function DeviceManagementScreen() {
         device_type: deviceType,
         capacity_kwh: capacity ? parseFloat(capacity) : null,
         efficiency_rating: efficiency ? parseFloat(efficiency) : null,
+        installation_date: installationDate || null,
+        metadata: {
+          manufacturer: manufacturer.trim() || null,
+          serial_number: serialNumber.trim() || null,
+          location: location.trim() || null,
+        },
       };
 
       if (editingDevice) {
@@ -211,12 +238,16 @@ export default function DeviceManagementScreen() {
       <Ionicons name="hardware-chip-outline" size={64} color="#CCC" />
       <Text style={styles.emptyTitle}>No Devices Added</Text>
       <Text style={styles.emptyText}>
-        Add your solar panels, batteries, and other devices to start trading energy
+        {canManageDevices 
+          ? 'Add your solar panels, batteries, and other devices to start trading energy'
+          : 'No devices connected yet'}
       </Text>
-      <TouchableOpacity style={styles.emptyButton} onPress={openAddModal}>
-        <Ionicons name="add-circle" size={20} color="#FFF" />
-        <Text style={styles.emptyButtonText}>Add Your First Device</Text>
-      </TouchableOpacity>
+      {canManageDevices && (
+        <TouchableOpacity style={styles.emptyButton} onPress={openAddModal}>
+          <Ionicons name="add-circle" size={20} color="#FFF" />
+          <Text style={styles.emptyButtonText}>Add Your First Device</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -228,9 +259,11 @@ export default function DeviceManagementScreen() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Devices</Text>
-        <TouchableOpacity onPress={openAddModal}>
-          <Ionicons name="add-circle" size={28} color="#4CAF50" />
-        </TouchableOpacity>
+        {canManageDevices && (
+          <TouchableOpacity onPress={openAddModal}>
+            <Ionicons name="add-circle" size={28} color="#4CAF50" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Device List */}
@@ -340,6 +373,54 @@ export default function DeviceManagementScreen() {
                   onChangeText={setEfficiency}
                   placeholder="e.g., 85"
                   keyboardType="decimal-pad"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              {/* Manufacturer */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Manufacturer</Text>
+                <TextInput
+                  style={styles.input}
+                  value={manufacturer}
+                  onChangeText={setManufacturer}
+                  placeholder="e.g., Tesla, LG, Panasonic"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              {/* Serial Number */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Serial Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={serialNumber}
+                  onChangeText={setSerialNumber}
+                  placeholder="e.g., SN123456789"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              {/* Installation Date */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Installation Date</Text>
+                <TextInput
+                  style={styles.input}
+                  value={installationDate}
+                  onChangeText={setInstallationDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              {/* Location */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Location</Text>
+                <TextInput
+                  style={styles.input}
+                  value={location}
+                  onChangeText={setLocation}
+                  placeholder="e.g., Rooftop, Backyard"
                   placeholderTextColor="#999"
                 />
               </View>

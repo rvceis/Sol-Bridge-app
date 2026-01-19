@@ -8,14 +8,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme';
 
 // Screen imports
-import { DeviceManagementScreen } from '../screens/main';
-import AddDeviceScreen from '../screens/host/AddDeviceScreen';
-import DeviceDetailScreen from '../screens/host/DeviceDetailScreen';
+import DeviceManagementScreen from '../screens/devices/DeviceManagementScreen';
 
 export type DeviceStackParamList = {
   DeviceList: undefined;
-  AddDevice: undefined;
-  DeviceDetail: { deviceId: string };
 };
 
 const Stack = createNativeStackNavigator<DeviceStackParamList>();
@@ -30,18 +26,6 @@ const DeviceStackNavigator: React.FC = () => {
       <Stack.Screen
         name="DeviceList"
         component={DeviceManagementScreen}
-        options={{}}
-      />
-
-      <Stack.Screen
-        name="AddDevice"
-        component={AddDeviceScreen}
-        options={{}}
-      />
-
-      <Stack.Screen
-        name="DeviceDetail"
-        component={DeviceDetailScreen}
         options={{}}
       />
     </Stack.Navigator>
