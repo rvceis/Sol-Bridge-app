@@ -115,8 +115,8 @@ export const ENDPOINTS = {
   // IoT & Energy Data
   iot: {
     ingest: '/iot/ingest',
-    latest: '/iot/latest',
-    history: '/iot/history',
+    latest: '/iot/readings/latest',
+    history: '/iot/readings/history',
     deviceCommand: '/iot/device-command',
     registerDevice: '/iot/devices',
   },

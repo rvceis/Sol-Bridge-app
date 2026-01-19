@@ -49,7 +49,7 @@
         "projectId": "d0285e3f-bdb4-40e0-8624-712bc48dbdd3"
       },
       "EXPO_PUBLIC_ENV": "production",
-      "EXPO_PUBLIC_API_URL": "https://sol-bridge.onrender.com",
+      "EXPO_PUBLIC_API_URL": "httdps://sol-bridge.onrender.com",
       "EXPO_PUBLIC_ML_URL": "https://solbridge-ai.onrender.com:8001"
       
     }

@@ -122,6 +122,21 @@ export default function DeviceManagementScreen() {
       return;
     }
 
+    // Validate installation date format if provided
+    if (installationDate.trim()) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(installationDate.trim())) {
+        Alert.alert('Error', 'Installation date must be in YYYY-MM-DD format');
+        return;
+      }
+      // Verify it's a valid date
+      const dateObj = new Date(installationDate.trim());
+      if (isNaN(dateObj.getTime())) {
+        Alert.alert('Error', 'Please enter a valid date');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const deviceData = {
@@ -129,7 +144,7 @@ export default function DeviceManagementScreen() {
         device_type: deviceType,
         capacity_kwh: capacity ? parseFloat(capacity) : null,
         efficiency_rating: efficiency ? parseFloat(efficiency) : null,
-        installation_date: installationDate || null,
+        installation_date: installationDate.trim() || null,
         metadata: {
           manufacturer: manufacturer.trim() || null,
           serial_number: serialNumber.trim() || null,
