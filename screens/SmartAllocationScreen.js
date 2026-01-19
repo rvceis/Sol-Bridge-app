@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, ScrollView, StyleSheet, ActivityIndicator, Alert, FlatList } from 'react-native';
 import { Text, Card, Button, Chip, ProgressBar, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../theme/colors';
@@ -12,23 +12,58 @@ const SmartAllocationScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [selectedMatches, setSelectedMatches] = useState({});
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Memoized cache key to avoid unnecessary re-renders
+  const cacheKey = useMemo(() => 
+    buyerRequirement ? `${buyerRequirement.requiredKwh}-${buyerRequirement.maxPrice}` : '',
+    [buyerRequirement]
+  );
 
   useEffect(() => {
-    fetchMatches();
-  }, []);
+    // Use lazy initialization - only fetch if needed
+    fetchMatches(false);
+  }, [cacheKey]);
 
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async (isRefresh = false) => {
+    if (!buyerRequirement) {
+      setError('No buyer requirement provided');
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+        matchingApi.clearCache(); // Force refresh
+      } else {
+        setLoading(true);
+      }
+
+      console.log('[FETCH] Loading matches for:', buyerRequirement);
+      const startTime = performance.now();
+
       const response = await matchingApi.findSellers(buyerRequirement);
+      
+      const endTime = performance.now();
+      console.log(`[TIMING] Fetch took ${endTime - startTime}ms`);
+
+      // Validate response
+      if (!response || !response.matches) {
+        throw new Error('Invalid response format');
+      }
+
       setMatches(response.matches || []);
+      setError(null);
     } catch (err) {
+      console.error('[ERROR]', err);
       setError(err.message || 'Failed to fetch matches');
-      Alert.alert('Error', error);
+      Alert.alert('Error', err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [buyerRequirement]);
 
   const handleSelectMatch = (matchId) => {
     setSelectedMatches(prev => ({
@@ -168,6 +203,7 @@ const SmartAllocationScreen = ({ route, navigation }) => {
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Finding best matches...</Text>
+        <Text style={styles.loadingSubtext}>(Querying backend...)</Text>
       </View>
     );
   }
@@ -177,7 +213,7 @@ const SmartAllocationScreen = ({ route, navigation }) => {
       <View style={styles.centerContainer}>
         <Icon name="alert-circle" size={48} color={colors.error} />
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={fetchMatches} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchMatches(true)} style={styles.retryButton}>
           Retry
         </Button>
       </View>
@@ -185,9 +221,16 @@ const SmartAllocationScreen = ({ route, navigation }) => {
   }
 
   const selectedCount = Object.values(selectedMatches).filter(Boolean).length;
-  const totalCost = matches
-    .filter(m => selectedMatches[m.id])
-    .reduce((sum, m) => sum + (m.price_per_kwh * m.available_kwh), 0);
+  const totalCost = useMemo(() => 
+    matches
+      .filter(m => selectedMatches[m.id])
+      .reduce((sum, m) => sum + (m.price_per_kwh * m.available_kwh), 0),
+    [selectedMatches, matches]
+  );
+
+  const renderMatchCardMemo = useCallback((item) => renderMatchCard(item.item, item.index), [selectedMatches, buyerRequirement]);
+
+  const keyExtractor = useCallback((item) => item.id || Math.random().toString(), []);
 
   return (
     <View style={styles.container}>
@@ -198,14 +241,22 @@ const SmartAllocationScreen = ({ route, navigation }) => {
         </Text>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} scrollEnabled={true}>
         {matches.length === 0 ? (
           <View style={styles.emptyState}>
             <Icon name="magnify-close" size={48} color={colors.placeholder} />
             <Text style={styles.emptyText}>No sellers found for your requirements</Text>
           </View>
         ) : (
-          matches.map((match, idx) => renderMatchCard(match, idx))
+          <FlatList
+            data={matches}
+            renderItem={renderMatchCardMemo}
+            keyExtractor={keyExtractor}
+            scrollEnabled={false}
+            initialNumToRender={5}
+            maxToRenderPerBatch={10}
+            removeClippedSubviews={true}
+          />
         )}
       </ScrollView>
 
@@ -422,6 +473,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.placeholder,
     marginTop: 12,
+  },
+  loadingSubtext: {
+    fontSize: 12,
+    color: colors.placeholder,
+    marginTop: 8,
   },
   errorText: {
     fontSize: 16,

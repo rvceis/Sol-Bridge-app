@@ -1,14 +1,39 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
+// Simple in-memory cache for matches
+const matchCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Timeout configuration for better performance
+const API_TIMEOUT = 10000; // 10 seconds max
+
+const getCacheKey = (requirement) => {
+  return `sellers_${requirement.requiredKwh}_${requirement.maxPrice}_${requirement.renewable}`;
+};
+
 const matchingApi = {
   /**
-   * Find best sellers for buyer's energy requirement
+   * Find best sellers for buyer's energy requirement with caching
    * Returns ranked list of sellers with detailed match scores
    */
   findSellers: async (buyerRequirement) => {
     try {
-      const response = await axios.post(
+      // Check cache first
+      const cacheKey = getCacheKey(buyerRequirement);
+      const cachedData = matchCache.get(cacheKey);
+      
+      if (cachedData && Date.now() - cachedData.timestamp < CACHE_TTL) {
+        console.log('[CACHE HIT] Returning cached matches');
+        return cachedData.data;
+      }
+
+      // Create axios instance with timeout
+      const instance = axios.create({
+        timeout: API_TIMEOUT,
+      });
+
+      const response = await instance.post(
         `${API_BASE_URL}/api/v1/matching/find-sellers`,
         {
           requiredKwh: buyerRequirement.requiredKwh,
@@ -20,8 +45,18 @@ const matchingApi = {
         }
       );
       
-      return response.data.data;
+      // Cache the response
+      const data = response.data.data;
+      matchCache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
+
+      return data;
     } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout - backend is taking too long to respond');
+      }
       throw new Error(error.response?.data?.message || 'Failed to fetch matches');
     }
   },
@@ -31,12 +66,16 @@ const matchingApi = {
    */
   getMatchDetails: async (matchId) => {
     try {
-      const response = await axios.get(
+      const instance = axios.create({ timeout: API_TIMEOUT });
+      const response = await instance.get(
         `${API_BASE_URL}/api/v1/matching/matches/${matchId}`
       );
       
       return response.data.data;
     } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout');
+      }
       throw new Error(error.response?.data?.message || 'Failed to fetch match details');
     }
   },
@@ -46,7 +85,8 @@ const matchingApi = {
    */
   createAllocation: async (selectedMatches) => {
     try {
-      const response = await axios.post(
+      const instance = axios.create({ timeout: API_TIMEOUT });
+      const response = await instance.post(
         `${API_BASE_URL}/api/v1/matching/allocate`,
         {
           matches: selectedMatches.map(match => ({
@@ -59,21 +99,43 @@ const matchingApi = {
       
       return response.data.data;
     } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout');
+      }
       throw new Error(error.response?.data?.message || 'Failed to create allocation');
     }
   },
 
   /**
-   * Get user's active allocations
+   * Get user's active allocations with caching
    */
-  getActiveAllocations: async () => {
+  getActiveAllocations: async (forceRefresh = false) => {
     try {
-      const response = await axios.get(
+      // Simple cache for allocations (1 minute)
+      const allocationsCacheKey = 'allocations_active';
+      if (!forceRefresh) {
+        const cachedAlloc = matchCache.get(allocationsCacheKey);
+        if (cachedAlloc && Date.now() - cachedAlloc.timestamp < 60000) {
+          return cachedAlloc.data;
+        }
+      }
+
+      const instance = axios.create({ timeout: API_TIMEOUT });
+      const response = await instance.get(
         `${API_BASE_URL}/api/v1/matching/allocations/active`
       );
       
-      return response.data.data;
+      const data = response.data.data;
+      matchCache.set(allocationsCacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
+
+      return data;
     } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout');
+      }
       throw new Error(error.response?.data?.message || 'Failed to fetch allocations');
     }
   },
@@ -83,14 +145,28 @@ const matchingApi = {
    */
   cancelAllocation: async (allocationId) => {
     try {
-      const response = await axios.delete(
+      const instance = axios.create({ timeout: API_TIMEOUT });
+      const response = await instance.delete(
         `${API_BASE_URL}/api/v1/matching/allocations/${allocationId}`
       );
       
+      // Clear allocation cache on cancel
+      matchCache.delete('allocations_active');
+      
       return response.data.data;
     } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout');
+      }
       throw new Error(error.response?.data?.message || 'Failed to cancel allocation');
     }
+  },
+
+  /**
+   * Clear all caches (useful for forced refresh)
+   */
+  clearCache: () => {
+    matchCache.clear();
   },
 
   /**
