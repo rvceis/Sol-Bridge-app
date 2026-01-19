@@ -33,6 +33,23 @@ import {
 import { useResponsive } from '../../hooks/useResponsive';
 import { safeToFixed } from '../../utils/formatters';
 
+interface EnergySource {
+  id: string;
+  host_id: string;
+  source_name: string;
+  host_name: string;
+  host_rating: number;
+  solar_capacity_kw: number;
+  city: string;
+  state: string;
+  match_score: number;
+  price_per_kwh: number;
+  distance_km: number;
+  renewable_certified: boolean;
+  available_kwh: number;
+  listing_active: boolean;
+}
+
 const timeRanges: { key: TimeRange; label: string }[] = [
   { key: 'today', label: 'Today' },
   { key: 'week', label: 'Week' },
@@ -105,7 +122,9 @@ const EnergyScreen: React.FC = () => {
 
   const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
   const [devices, setDevices] = useState<any[]>([]);
+  const [energySources, setEnergySources] = useState<EnergySource[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
+  const [loadingSources, setLoadingSources] = useState(false);
 
   const loadDevices = useCallback(async () => {
     if (!isHost) return; // Only load devices for hosts
@@ -120,10 +139,27 @@ const EnergyScreen: React.FC = () => {
     }
   }, [isHost]);
 
+  const loadEnergySources = useCallback(async () => {
+    if (isHost) return; // Only load sources for buyers
+    try {
+      setLoadingSources(true);
+      const response = await marketplaceApi.getMyEnergySources();
+      setEnergySources(response.data || []);
+    } catch (error) {
+      console.error('Error loading energy sources:', error);
+    } finally {
+      setLoadingSources(false);
+    }
+  }, [isHost]);
+
   useEffect(() => {
     loadData();
-    loadDevices();
-  }, [loadDevices]);
+    if (isHost) {
+      loadDevices();
+    } else {
+      loadEnergySources();
+    }
+  }, [loadDevices, loadEnergySources, isHost]);
 
   const loadData = useCallback(() => {
     fetchLatestReading();
@@ -309,94 +345,184 @@ const EnergyScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Device Status */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Devices</Text>
-            <TouchableOpacity
-              onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
-            >
-              <Text style={styles.viewAllLink}>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {loadingDevices ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.primary.main} />
+        {/* Device Status (Hosts) / Energy Sources (Buyers) */}
+        {isHost ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Devices</Text>
+              <TouchableOpacity
+                onPress={() => (navigation as any).navigate('Devices', { screen: 'DeviceManagement' })}
+              >
+                <Text style={styles.viewAllLink}>View All</Text>
+              </TouchableOpacity>
             </View>
-          ) : devices.length === 0 ? (
-            <TouchableOpacity
-              style={styles.emptyDeviceCard}
-              onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
-            >
-              <Ionicons name="add-circle-outline" size={48} color={colors.text.tertiary} />
-              <Text style={styles.emptyDeviceTitle}>No Devices Added</Text>
-              <Text style={styles.emptyDeviceText}>
-                Tap to add your solar panels and start tracking production
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            devices.slice(0, 2).map((device) => (
-              <View key={device.device_id} style={styles.deviceCard}>
-                <View style={styles.deviceHeader}>
-                  <View style={styles.deviceInfo}>
-                    <View style={[styles.deviceIcon, { backgroundColor: colors.success.light }]}>
-                      <Ionicons
-                        name={getDeviceIcon(device.device_type)}
-                        size={20}
-                        color={colors.success.main}
-                      />
-                    </View>
-                    <View>
-                      <Text style={styles.deviceName}>{device.device_name}</Text>
-                      <View style={styles.deviceStatusRow}>
-                        <View style={styles.onlineIndicator} />
-                        <Text style={styles.deviceStatus}>
-                          {device.status || 'Online'}
-                        </Text>
+
+            {loadingDevices ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.primary.main} />
+              </View>
+            ) : devices.length === 0 ? (
+              <TouchableOpacity
+                style={styles.emptyDeviceCard}
+                onPress={() => (navigation as any).navigate('Devices', { screen: 'DeviceManagement' })}
+              >
+                <Ionicons name="add-circle-outline" size={48} color={colors.text.tertiary} />
+                <Text style={styles.emptyDeviceTitle}>No Devices Added</Text>
+                <Text style={styles.emptyDeviceText}>
+                  Tap to add your solar panels and start tracking production
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              devices.slice(0, 2).map((device) => (
+                <View key={device.device_id} style={styles.deviceCard}>
+                  <View style={styles.deviceHeader}>
+                    <View style={styles.deviceInfo}>
+                      <View style={[styles.deviceIcon, { backgroundColor: colors.success.light }]}>
+                        <Ionicons
+                          name={getDeviceIcon(device.device_type)}
+                          size={20}
+                          color={colors.success.main}
+                        />
+                      </View>
+                      <View>
+                        <Text style={styles.deviceName}>{device.device_name}</Text>
+                        <View style={styles.deviceStatusRow}>
+                          <View style={styles.onlineIndicator} />
+                          <Text style={styles.deviceStatus}>
+                            {device.status || 'Online'}
+                          </Text>
+                        </View>
                       </View>
                     </View>
+                    <TouchableOpacity
+                      style={styles.deviceMoreButton}
+                      onPress={() => (navigation as any).navigate('Devices', { screen: 'DeviceManagement' })}
+                    >
+                      <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.tertiary} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.deviceMoreButton}
-                    onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
-                  >
-                    <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.tertiary} />
-                  </TouchableOpacity>
-                </View>
 
-                <View style={styles.deviceStats}>
-                  {device.capacity_kwh && (
+                  <View style={styles.deviceStats}>
+                    {device.capacity_kwh && (
+                      <View style={styles.deviceStatItem}>
+                        <Text style={styles.deviceStatLabel}>Capacity</Text>
+                        <Text style={styles.deviceStatValue}>
+                          {device.capacity_kwh} kWh
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.deviceStatItem}>
-                      <Text style={styles.deviceStatLabel}>Capacity</Text>
+                      <Text style={styles.deviceStatLabel}>Voltage</Text>
                       <Text style={styles.deviceStatValue}>
-                        {device.capacity_kwh} kWh
+                        {safeToFixed(latestReading?.voltage, 1) || '0'} V
                       </Text>
                     </View>
-                  )}
-                  <View style={styles.deviceStatItem}>
-                    <Text style={styles.deviceStatLabel}>Voltage</Text>
-                    <Text style={styles.deviceStatValue}>
-                      {safeToFixed(latestReading?.voltage, 1) || '0'} V
-                    </Text>
-                  </View>
-                  <View style={styles.deviceStatItem}>
-                    <Text style={styles.deviceStatLabel}>Current</Text>
-                    <Text style={styles.deviceStatValue}>
-                      {safeToFixed(latestReading?.current, 2) || '0'} A
-                    </Text>
-                  </View>
-                  <View style={styles.deviceStatItem}>
-                    <Text style={styles.deviceStatLabel}>Temperature</Text>
-                    <Text style={styles.deviceStatValue}>
-                      {safeToFixed(latestReading?.temperature, 1) || '0'}°C
-                    </Text>
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Current</Text>
+                      <Text style={styles.deviceStatValue}>
+                        {safeToFixed(latestReading?.current, 2) || '0'} A
+                      </Text>
+                    </View>
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Temperature</Text>
+                      <Text style={styles.deviceStatValue}>
+                        {safeToFixed(latestReading?.temperature, 1) || '0'}°C
+                      </Text>
+                    </View>
                   </View>
                 </View>
+              ))
+            )}
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Energy Sources</Text>
+              <TouchableOpacity
+                onPress={() => (navigation as any).navigate('Marketplace', { screen: 'FindEnergySources' })}
+              >
+                <Text style={styles.viewAllLink}>Find More</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loadingSources ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.primary.main} />
               </View>
-            ))
-          )}
-        </View>
+            ) : energySources.length === 0 ? (
+              <TouchableOpacity
+                style={styles.emptyDeviceCard}
+                onPress={() => (navigation as any).navigate('Marketplace', { screen: 'FindEnergySources' })}
+              >
+                <Ionicons name="flash-outline" size={48} color={colors.text.tertiary} />
+                <Text style={styles.emptyDeviceTitle}>No Energy Sources</Text>
+                <Text style={styles.emptyDeviceText}>
+                  Find and connect with solar energy hosts near you
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              energySources.slice(0, 2).map((source) => (
+                <View key={source.id} style={styles.deviceCard}>
+                  <View style={styles.deviceHeader}>
+                    <View style={styles.deviceInfo}>
+                      <View style={[styles.deviceIcon, { backgroundColor: colors.primary.light }]}>
+                        <Ionicons name="sunny" size={20} color={colors.primary.main} />
+                      </View>
+                      <View>
+                        <Text style={styles.deviceName}>{source.source_name || source.host_name}</Text>
+                        <View style={styles.deviceStatusRow}>
+                          {source.renewable_certified && (
+                            <Ionicons name="leaf" size={12} color={colors.success.main} style={{ marginRight: 4 }} />
+                          )}
+                          <Text style={styles.deviceStatus}>
+                            {source.city || 'Solar Host'} • ⭐ {safeToFixed(source.host_rating, 1)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    {source.listing_active && (
+                      <View style={[styles.statusBadge, { backgroundColor: colors.success.light }]}>
+                        <Text style={[styles.statusBadgeText, { color: colors.success.main }]}>Available</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.deviceStats}>
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Match</Text>
+                      <Text style={styles.deviceStatValue}>{source.match_score}%</Text>
+                    </View>
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Price</Text>
+                      <Text style={styles.deviceStatValue}>₹{safeToFixed(source.price_per_kwh, 2)}/kWh</Text>
+                    </View>
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Available</Text>
+                      <Text style={styles.deviceStatValue}>{safeToFixed(source.available_kwh, 1)} kWh</Text>
+                    </View>
+                    {source.distance_km > 0 && (
+                      <View style={styles.deviceStatItem}>
+                        <Text style={styles.deviceStatLabel}>Distance</Text>
+                        <Text style={styles.deviceStatValue}>{safeToFixed(source.distance_km, 1)} km</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.buyButton}
+                    onPress={() => (navigation as any).navigate('Marketplace', { 
+                      screen: 'MarketplaceMain',
+                      params: { sellerId: source.host_id }
+                    })}
+                  >
+                    <Ionicons name="cart-outline" size={16} color={colors.neutral.white} />
+                    <Text style={styles.buyButtonText}>Buy Energy</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </View>
+        )}
 
         {/* Bottom Spacing */}
         <View style={{ height: 100 }} />
@@ -718,6 +844,30 @@ const styles = StyleSheet.create({
   deviceStatValue: {
     ...typography.textStyles.bodySmall,
     color: colors.text.primary,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgeText: {
+    ...typography.textStyles.tiny,
+    fontWeight: '600',
+  },
+  buyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary.main,
+    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  buyButtonText: {
+    ...typography.textStyles.bodySmall,
+    color: colors.neutral.white,
     fontWeight: '600',
   },
 });

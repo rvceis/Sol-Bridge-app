@@ -172,6 +172,53 @@ export const marketplaceApi = {
     const response = await apiClient.get(`/marketplace/statistics?days=${days}`);
     return response.data;
   },
+
+  // ===== Energy Sources API (For Buyers) =====
+  
+  // Find matching energy sources (hosts) based on preferences
+  findEnergySources: async (preferences?: {
+    maxPrice?: number;
+    maxDistance?: number;
+    renewableOnly?: boolean;
+    limit?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (preferences) {
+      if (preferences.maxPrice) params.append('maxPrice', String(preferences.maxPrice));
+      if (preferences.maxDistance) params.append('maxDistance', String(preferences.maxDistance));
+      if (preferences.renewableOnly) params.append('renewableOnly', 'true');
+      if (preferences.limit) params.append('limit', String(preferences.limit));
+    }
+    const response = await apiClient.get(`/energy-sources/find?${params.toString()}`);
+    return response.data;
+  },
+
+  // Save a host as buyer's energy source
+  saveEnergySource: async (sourceData: {
+    hostId: string;
+    sourceName?: string;
+    matchScore?: number;
+    pricePerKwh?: number;
+    distanceKm?: number;
+    renewableCertified?: boolean;
+    subscriptionType?: 'on-demand' | 'monthly' | 'yearly';
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/energy-sources/save', sourceData);
+    return response.data;
+  },
+
+  // Get buyer's saved energy sources
+  getMyEnergySources: async (activeOnly: boolean = true) => {
+    const response = await apiClient.get(`/energy-sources/my-sources?activeOnly=${activeOnly}`);
+    return response.data;
+  },
+
+  // Remove an energy source
+  removeEnergySource: async (sourceId: string) => {
+    const response = await apiClient.delete(`/energy-sources/${sourceId}`);
+    return response.data;
+  },
 };
 
 export default marketplaceApi;
