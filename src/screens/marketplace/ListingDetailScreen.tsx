@@ -115,6 +115,24 @@ export default function ListingDetailScreen() {
       marginLeft: responsive.screenPadding,
       flex: 1,
     },
+    sellerActions: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: responsive.gridGap,
+    },
+    chatBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap,
+      borderRadius: 20,
+      backgroundColor: '#E8F0FF',
+    },
+    chatBtnText: {
+      color: '#007AFF',
+      fontWeight: '600',
+      marginLeft: 6,
+    },
     sellerName: {
       fontSize: 20 * responsive.fontScale,
       fontWeight: '700',
@@ -556,6 +574,20 @@ export default function ListingDetailScreen() {
             <View style={styles.sellerInfo}>
               <Text style={styles.sellerName}>{listing.seller_name}</Text>
               <Text style={styles.sellerEmail}>{listing.seller_email}</Text>
+              <View style={styles.sellerActions}>
+                <TouchableOpacity
+                  style={styles.chatBtn}
+                  onPress={() =>
+                    (navigation as any).navigate('Discover', {
+                      screen: 'Chat',
+                      params: { userId: listing.seller_id, name: listing.seller_name },
+                    })
+                  }
+                >
+                  <Ionicons name="chatbubble-outline" size={16} color="#007AFF" />
+                  <Text style={styles.chatBtnText}>Chat</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
           {listing.renewable_cert && (

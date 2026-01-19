@@ -227,6 +227,19 @@ const HomeScreen: React.FC = () => {
               </LinearGradient>
               <Text style={styles.actionLabel}>Community</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => (navigation as any).navigate('Discover', { screen: 'Chat', params: { userId: 'support', name: 'Support' } })}
+            >
+              <LinearGradient
+                colors={[colors.secondary.light, colors.secondary.main + '30']}
+                style={styles.actionIconBg}
+              >
+                <Ionicons name="chatbubble-ellipses" size={24} color={colors.secondary.main} />
+              </LinearGradient>
+              <Text style={styles.actionLabel}>Messages</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

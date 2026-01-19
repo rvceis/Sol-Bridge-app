@@ -181,24 +181,31 @@ export const useAuthStore = create<AuthState>()(
 
       // Check auth status on app start
       checkAuthStatus: async (): Promise<void> => {
-        set({ status: 'loading' });
-
         try {
           const isAuth = await authService.isAuthenticated();
 
           if (isAuth) {
             const user = await authService.getStoredUser();
             if (user) {
+              // Immediately set authenticated with cached user data
+              // This shows the app instantly without waiting for API
               set({
                 user,
                 status: 'authenticated',
               });
 
-              // Optionally refresh profile from server
-              const profileResponse = await authService.getProfile();
-              if (profileResponse.success && profileResponse.data) {
-                set({ user: profileResponse.data });
-              }
+              // Refresh profile from server in background (non-blocking)
+              // This updates the user data if anything changed
+              authService.getProfile()
+                .then((profileResponse) => {
+                  if (profileResponse.success && profileResponse.data) {
+                    set({ user: profileResponse.data });
+                  }
+                })
+                .catch(() => {
+                  // Silently fail - we already have cached data
+                  console.log('[Auth] Background profile refresh failed, using cached data');
+                });
             } else {
               set({ status: 'unauthenticated' });
             }
