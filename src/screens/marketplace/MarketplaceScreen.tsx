@@ -248,10 +248,38 @@ export default function MarketplaceScreen() {
       color: '#2196F3',
       textTransform: 'capitalize',
     },
+    chatButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: responsive.cardPadding,
+      paddingVertical: responsive.gridGap / 1.5,
+      borderRadius: 12,
+      backgroundColor: '#E8F0FE',
+    },
+    chatButtonText: {
+      fontSize: 12 * responsive.fontScale,
+      fontWeight: '600',
+      color: '#007AFF',
+    },
     availabilityText: {
       fontSize: 11 * responsive.fontScale,
       color: '#999',
     },
+     chatButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       gap: 6,
+       paddingHorizontal: 12,
+       paddingVertical: 8,
+       backgroundColor: '#E3F2FD',
+       borderRadius: 12,
+     },
+     chatButtonText: {
+       fontSize: 12 * responsive.fontScale,
+       fontWeight: '600',
+       color: '#007AFF',
+     },
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.5)',
@@ -568,6 +596,30 @@ export default function MarketplaceScreen() {
     const pricePerKwh = Number(item.price_per_kwh) || 0;
     const totalPrice = energyAmount * pricePerKwh;
 
+     const handleContactSeller = () => {
+       Alert.alert(
+         'Contact Seller',
+         `Start chat with ${item.seller_name}?`,
+         [
+           { text: 'Cancel', style: 'cancel' },
+           {
+             text: 'Chat',
+             onPress: () => {
+               // Navigate to Chat inside Discover tab
+               (navigation as any).navigate('Discover', {
+                 screen: 'Chat',
+                 params: {
+                   userId: item.seller_id,
+                   name: item.seller_name,
+                   listingId: item.id,
+                 },
+               });
+             },
+           },
+         ]
+       );
+     };
+
     return (
       <TouchableOpacity
         style={styles.listingCard}
@@ -613,9 +665,13 @@ export default function MarketplaceScreen() {
           <View style={styles.typeChip}>
             <Text style={styles.typeText}>{(item.listing_type || 'spot').replace('_', ' ')}</Text>
           </View>
-          <Text style={styles.availabilityText}>
-            Available {item.available_from ? new Date(item.available_from).toLocaleDateString() : 'N/A'}
-          </Text>
+           <TouchableOpacity 
+             style={styles.chatButton}
+             onPress={handleContactSeller}
+           >
+             <Ionicons name="chatbubble-outline" size={16} color="#007AFF" />
+             <Text style={styles.chatButtonText}>Chat</Text>
+           </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );

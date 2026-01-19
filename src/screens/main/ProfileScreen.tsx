@@ -176,7 +176,7 @@ const ProfileScreen: React.FC = () => {
                 style={styles.avatarPlaceholder}
               >
                 <Text style={styles.avatarText}>
-                  {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </Text>
               </LinearGradient>
             ) : (
@@ -185,7 +185,7 @@ const ProfileScreen: React.FC = () => {
                 style={styles.avatarPlaceholder}
               >
                 <Text style={styles.avatarText}>
-                  {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </Text>
               </LinearGradient>
             )}
@@ -198,7 +198,7 @@ const ProfileScreen: React.FC = () => {
           </View>
 
           {/* User Info */}
-          <Text style={styles.userName}>{user?.fullName || 'User'}</Text>
+          <Text style={styles.userName}>{user?.full_name || 'User'}</Text>
           <Text style={styles.userEmail}>{user?.email || 'email@example.com'}</Text>
 
           {/* Role Badge */}

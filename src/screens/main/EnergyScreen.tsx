@@ -13,10 +13,13 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useNavigation } from '@react-navigation/native';
+import { marketplaceApi } from '../../api/marketplaceService';
 
 const { width } = Dimensions.get('window');
 import { colors, spacing, typography, gradients } from '../../theme';
@@ -66,9 +69,23 @@ const ChartBar: React.FC<{
   );
 };
 
+const getDeviceIcon = (deviceType: string): any => {
+  const iconMap: Record<string, any> = {
+    solar_panel: 'sunny',
+    solar_meter: 'speedometer',
+    battery: 'battery-charging',
+    inverter: 'flash',
+    smart_meter: 'analytics',
+    wind_turbine: 'cloudy',
+    ev_charger: 'car',
+  };
+  return iconMap[deviceType] || 'hardware-chip';
+};
+
 const EnergyScreen: React.FC = () => {
   const responsive = useResponsive();
   const { insets } = responsive;
+  const navigation = useNavigation();
 
   const user = useAuthStore((state) => state.user);
   const isHost = user?.role === 'host';
@@ -87,15 +104,32 @@ const EnergyScreen: React.FC = () => {
   const refresh = useEnergyStore((state) => state.refresh);
 
   const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+
+  const loadDevices = useCallback(async () => {
+    if (!isHost) return; // Only load devices for hosts
+    try {
+      setLoadingDevices(true);
+      const response = await marketplaceApi.getMyDevices();
+      setDevices(response.data || []);
+    } catch (error) {
+      console.error('Error loading devices:', error);
+    } finally {
+      setLoadingDevices(false);
+    }
+  }, [isHost]);
 
   useEffect(() => {
     loadData();
-  }, []);
+    loadDevices();
+  }, [loadDevices]);
 
   const loadData = useCallback(() => {
     fetchLatestReading();
     fetchHistory();
-  }, [fetchLatestReading, fetchHistory]);
+    loadDevices();
+  }, [fetchLatestReading, fetchHistory, loadDevices]);
 
   const handleTimeRangeChange = async (range: TimeRange) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -277,54 +311,91 @@ const EnergyScreen: React.FC = () => {
 
         {/* Device Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Device Status</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Devices</Text>
+            <TouchableOpacity
+              onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
+            >
+              <Text style={styles.viewAllLink}>View All</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.deviceCard}>
-            <View style={styles.deviceHeader}>
-              <View style={styles.deviceInfo}>
-                <View style={[styles.deviceIcon, { backgroundColor: colors.success.light }]}>
-                  <Ionicons name="hardware-chip" size={20} color={colors.success.main} />
+          {loadingDevices ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary.main} />
+            </View>
+          ) : devices.length === 0 ? (
+            <TouchableOpacity
+              style={styles.emptyDeviceCard}
+              onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
+            >
+              <Ionicons name="add-circle-outline" size={48} color={colors.text.tertiary} />
+              <Text style={styles.emptyDeviceTitle}>No Devices Added</Text>
+              <Text style={styles.emptyDeviceText}>
+                Tap to add your solar panels and start tracking production
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            devices.slice(0, 2).map((device) => (
+              <View key={device.device_id} style={styles.deviceCard}>
+                <View style={styles.deviceHeader}>
+                  <View style={styles.deviceInfo}>
+                    <View style={[styles.deviceIcon, { backgroundColor: colors.success.light }]}>
+                      <Ionicons
+                        name={getDeviceIcon(device.device_type)}
+                        size={20}
+                        color={colors.success.main}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.deviceName}>{device.device_name}</Text>
+                      <View style={styles.deviceStatusRow}>
+                        <View style={styles.onlineIndicator} />
+                        <Text style={styles.deviceStatus}>
+                          {device.status || 'Online'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deviceMoreButton}
+                    onPress={() => (navigation as any).navigate('Marketplace', { screen: 'DeviceManagement' })}
+                  >
+                    <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.tertiary} />
+                  </TouchableOpacity>
                 </View>
-                <View>
-                  <Text style={styles.deviceName}>Solar Panel Array</Text>
-                  <View style={styles.deviceStatusRow}>
-                    <View style={styles.onlineIndicator} />
-                    <Text style={styles.deviceStatus}>Online</Text>
+
+                <View style={styles.deviceStats}>
+                  {device.capacity_kwh && (
+                    <View style={styles.deviceStatItem}>
+                      <Text style={styles.deviceStatLabel}>Capacity</Text>
+                      <Text style={styles.deviceStatValue}>
+                        {device.capacity_kwh} kWh
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.deviceStatItem}>
+                    <Text style={styles.deviceStatLabel}>Voltage</Text>
+                    <Text style={styles.deviceStatValue}>
+                      {safeToFixed(latestReading?.voltage, 1) || '0'} V
+                    </Text>
+                  </View>
+                  <View style={styles.deviceStatItem}>
+                    <Text style={styles.deviceStatLabel}>Current</Text>
+                    <Text style={styles.deviceStatValue}>
+                      {safeToFixed(latestReading?.current, 2) || '0'} A
+                    </Text>
+                  </View>
+                  <View style={styles.deviceStatItem}>
+                    <Text style={styles.deviceStatLabel}>Temperature</Text>
+                    <Text style={styles.deviceStatValue}>
+                      {safeToFixed(latestReading?.temperature, 1) || '0'}°C
+                    </Text>
                   </View>
                 </View>
               </View>
-              <TouchableOpacity style={styles.deviceMoreButton}>
-                <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.deviceStats}>
-              <View style={styles.deviceStatItem}>
-                <Text style={styles.deviceStatLabel}>Voltage</Text>
-                <Text style={styles.deviceStatValue}>
-                  {safeToFixed(latestReading?.voltage, 1) || '0'} V
-                </Text>
-              </View>
-              <View style={styles.deviceStatItem}>
-                <Text style={styles.deviceStatLabel}>Current</Text>
-                <Text style={styles.deviceStatValue}>
-                  {safeToFixed(latestReading?.current, 2) || '0'} A
-                </Text>
-              </View>
-              <View style={styles.deviceStatItem}>
-                <Text style={styles.deviceStatLabel}>Temperature</Text>
-                <Text style={styles.deviceStatValue}>
-                  {safeToFixed(latestReading?.temperature, 1) || '0'}°C
-                </Text>
-              </View>
-              <View style={styles.deviceStatItem}>
-                <Text style={styles.deviceStatLabel}>Battery</Text>
-                <Text style={styles.deviceStatValue}>
-                  {safeToFixed(latestReading?.batteryLevel, 0) || '0'}%
-                </Text>
-              </View>
-            </View>
-          </View>
+            ))
+          )}
         </View>
 
         {/* Bottom Spacing */}
@@ -539,10 +610,46 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   sectionTitle: {
     ...typography.textStyles.h3,
     color: colors.text.primary,
+  },
+  viewAllLink: {
+    ...typography.textStyles.bodySmall,
+    color: colors.primary.main,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  emptyDeviceCard: {
+    backgroundColor: colors.background.primary,
+    borderRadius: 16,
+    padding: spacing.xl,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+    borderStyle: 'dashed',
+    alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  emptyDeviceTitle: {
+    ...typography.textStyles.bodyLarge,
+    color: colors.text.primary,
+    fontWeight: '600',
+    marginTop: spacing.md,
+  },
+  emptyDeviceText: {
+    ...typography.textStyles.bodySmall,
+    color: colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
   },
   deviceCard: {
     backgroundColor: colors.background.primary,

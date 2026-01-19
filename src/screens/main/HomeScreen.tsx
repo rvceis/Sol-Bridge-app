@@ -12,7 +12,9 @@ import {
   RefreshControl,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, gradients } from '../../theme';
@@ -23,9 +25,12 @@ import { safeToFixed } from '../../utils/formatters';
 const HomeScreen: React.FC = () => {
   const responsive = useResponsive();
   const { insets } = responsive;
+  const navigation = useNavigation();
 
   const user = useAuthStore((state) => state.user);
   const isHost = user?.role === 'host';
+  const isBuyer = user?.role === 'buyer';
+  const isInvestor = user?.role === 'investor';
 
   const latestReading = useEnergyStore((state) => state.latestReading);
   const dailySummary = useEnergyStore((state) => state.dailySummary);
@@ -58,7 +63,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const getFirstName = () => {
-    return user?.fullName?.split(' ')[0] || 'User';
+    return user?.full_name?.split(' ')[0] || 'User';
   };
 
   return (
@@ -159,19 +164,29 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCard}>
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => {
+                if (isHost) (navigation as any).navigate('Energy');
+                else if (isBuyer) (navigation as any).navigate('Wallet');
+                else Alert.alert('Analytics', 'Coming soon for investors');
+              }}
+            >
               <LinearGradient
                 colors={[colors.primary.light, colors.primary.main + '30']}
                 style={styles.actionIconBg}
               >
-                <Ionicons name={isHost ? 'analytics' : 'cart'} size={24} color={colors.primary.main} />
+                <Ionicons name={isHost ? 'analytics' : isInvestor ? 'trending-up' : 'cart'} size={24} color={colors.primary.main} />
               </LinearGradient>
               <Text style={styles.actionLabel}>
-                {isHost ? 'View Analytics' : 'Buy Energy'}
+                {isHost ? 'View Analytics' : isBuyer ? 'Buy Energy' : 'Investments'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => (navigation as any).navigate('Wallet', { screen: 'Transactions' })}
+            >
               <LinearGradient
                 colors={[colors.secondary.light, colors.secondary.main + '30']}
                 style={styles.actionIconBg}
@@ -181,7 +196,14 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.actionLabel}>Transactions</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => {
+                if (isHost) (navigation as any).navigate('Energy', { screen: 'AddDevice' });
+                else if (isBuyer) (navigation as any).navigate('Wallet', { screen: 'Topup' });
+                else Alert.alert('Portfolio', 'Coming soon for investors');
+              }}
+            >
               <LinearGradient
                 colors={[colors.success.light, colors.success.main + '30']}
                 style={styles.actionIconBg}
@@ -189,11 +211,14 @@ const HomeScreen: React.FC = () => {
                 <Ionicons name="add-circle" size={24} color={colors.success.main} />
               </LinearGradient>
               <Text style={styles.actionLabel}>
-                {isHost ? 'Add Device' : 'Top Up'}
+                {isHost ? 'Add Device' : isBuyer ? 'Top Up' : 'Add Portfolio'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => (navigation as any).navigate('Discover', { screen: 'NearbyUsers' })}
+            >
               <LinearGradient
                 colors={[colors.info.light, colors.info.main + '30']}
                 style={styles.actionIconBg}

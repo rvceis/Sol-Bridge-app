@@ -40,7 +40,7 @@ const USER_TYPE_OPTIONS = [
   { key: 'all', label: 'All', icon: 'people' },
   { key: 'seller', label: 'Sellers', icon: 'flash' },
   { key: 'investor', label: 'Investors', icon: 'trending-up' },
-  { key: 'hoster', label: 'Hosters', icon: 'home' },
+  { key: 'host', label: 'Hosts', icon: 'home' },
 ];
 
 const RADIUS_OPTIONS = [10, 25, 50, 100, 200];
@@ -102,7 +102,7 @@ export default function NearbyUsersScreen() {
 
     try {
       const types = userType === 'all' 
-        ? ['seller', 'investor', 'hoster'] 
+        ? ['seller', 'investor', 'host'] 
         : [userType];
 
       const response = await locationApi.getNearbyUsers(
@@ -196,7 +196,7 @@ export default function NearbyUsersScreen() {
         return '#4CAF50';
       case 'investor':
         return '#9C27B0';
-      case 'hoster':
+      case 'host':
         return '#FF9800';
       default:
         return '#2196F3';
@@ -209,7 +209,7 @@ export default function NearbyUsersScreen() {
         return 'flash';
       case 'investor':
         return 'trending-up';
-      case 'hoster':
+      case 'host':
         return 'home';
       default:
         return 'person';
