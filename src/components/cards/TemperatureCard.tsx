@@ -138,7 +138,7 @@ export const TemperatureCard: React.FC<TemperatureCardProps> = ({
 
       <View style={styles.currentTemp}>
         <Text style={styles.tempValue}>{currentTemp.toFixed(1)}°C</Text>
-        <Text style={styles.tempLabel}>Current</Text>
+        <Text style={styles.tempLabel}>Current Temp</Text>
       </View>
 
       <View style={styles.statsContainer}>

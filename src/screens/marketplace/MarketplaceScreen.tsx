@@ -216,8 +216,8 @@ export default function MarketplaceScreen() {
       alignItems: 'flex-end',
     },
     priceLabel: {
-      fontSize: 11 * responsive.fontScale,
-      color: '#999',
+      fontSize: 12 * responsive.fontScale,
+      color: '#666',
       marginBottom: 2,
     },
     priceAmount: {
@@ -226,8 +226,8 @@ export default function MarketplaceScreen() {
       color: '#4CAF50',
     },
     totalPrice: {
-      fontSize: 11 * responsive.fontScale,
-      color: '#999',
+      fontSize: 12 * responsive.fontScale,
+      color: '#333',
       marginTop: 2,
     },
     cardFooter: {
@@ -655,7 +655,7 @@ export default function MarketplaceScreen() {
           </View>
 
           <View style={styles.priceInfo}>
-            <Text style={styles.priceLabel}>Price</Text>
+            <Text style={styles.priceLabel}>Price (₹/kWh)</Text>
             <Text style={styles.priceAmount}>₹{safeToFixed(pricePerKwh, 2)}/kWh</Text>
             <Text style={styles.totalPrice}>Total: ₹{safeToFixed(totalPrice, 2)}</Text>
           </View>

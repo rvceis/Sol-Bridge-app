@@ -18,8 +18,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { iotService } from '../../api';
 import { useAuthStore } from '../../store';
-import { ProductionCard } from '../../components/cards/ProductionCard';
 import { TemperatureCard } from '../../components/cards/TemperatureCard';
 
 interface Device {
@@ -60,6 +60,8 @@ export default function DeviceManagementScreen() {
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [saving, setSaving] = useState(false);
   const [expandedDeviceId, setExpandedDeviceId] = useState<string | null>(null);
+  const [latestReadings, setLatestReadings] = useState<Record<string, any>>({});
+  const [latestLoading, setLatestLoading] = useState<Record<string, boolean>>({});
 
   // Form state
   const [deviceName, setDeviceName] = useState('');
@@ -90,6 +92,22 @@ export default function DeviceManagementScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadDevices();
+    if (expandedDeviceId) {
+      fetchLatestReading(expandedDeviceId);
+    }
+  };
+
+  const fetchLatestReading = async (deviceId: string) => {
+    setLatestLoading((prev) => ({ ...prev, [deviceId]: true }));
+    try {
+      const response = await iotService.getDeviceLatest(deviceId);
+      const data = response.data?.data || response.data;
+      setLatestReadings((prev) => ({ ...prev, [deviceId]: data }));
+    } catch (error) {
+      console.error('Error loading latest reading:', error);
+    } finally {
+      setLatestLoading((prev) => ({ ...prev, [deviceId]: false }));
+    }
   };
 
   const copyToClipboard = (text: string, label: string = 'Copied') => {
@@ -252,7 +270,14 @@ export default function DeviceManagementScreen() {
       <View style={styles.deviceCardContainer}>
         <TouchableOpacity
           style={styles.deviceCard}
-          onPress={() => setExpandedDeviceId(isExpanded ? null : item.device_id)}
+          onPress={() => {
+            if (isExpanded) {
+              setExpandedDeviceId(null);
+            } else {
+              setExpandedDeviceId(item.device_id);
+              fetchLatestReading(item.device_id);
+            }
+          }}
         >
           <View style={styles.deviceIcon}>
             <Ionicons
@@ -323,11 +348,53 @@ export default function DeviceManagementScreen() {
 
         {isExpanded && (
           <View style={styles.productionContainer}>
-            <ProductionCard 
-              deviceId={item.device_id}
-              title="Production Data"
-              subtitle={item.device_name}
-            />
+            <View style={styles.realtimeCard}>
+              <View style={styles.realtimeHeader}>
+                <Text style={styles.realtimeTitle}>Realtime</Text>
+                {latestLoading[item.device_id] && (
+                  <ActivityIndicator size="small" color="#007AFF" />
+                )}
+              </View>
+              {latestReadings[item.device_id]?.reading ? (
+                <View style={styles.realtimeGrid}>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Voltage</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.voltage || 0).toFixed(2)} V
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Current</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.current || 0).toFixed(2)} A
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Power</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.power_w || 0).toFixed(2)} W
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Energy</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.energy_wh || 0).toFixed(2)} Wh
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyStateCompact}>
+                  {latestLoading[item.device_id] ? (
+                    <ActivityIndicator size="small" color="#007AFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="flash" size={20} color="#CCC" />
+                      <Text style={styles.emptyText}>No realtime data yet</Text>
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
             <TemperatureCard 
               deviceId={item.device_id}
               title="Device Temperature"

@@ -96,6 +96,13 @@ class IoTService {
   }
 
   /**
+   * Get latest reading for a specific device (real-time view)
+   */
+  async getDeviceLatest(deviceId: string): Promise<ApiResponse<any>> {
+    return api.get<any>(`${ENDPOINTS.iot.deviceLatest}/${deviceId}/latest`);
+  }
+
+  /**
    * Get historical energy data
    */
   async getHistory(params: HistoryParams): Promise<ApiResponse<HistoryResponse>> {

@@ -27,7 +27,6 @@ const BACKEND_URLS = {
   // Development (local) - Using Render backend for consistency
   development: {
     base: 'http://localhost:3000',
-    // base: 'https://sol-bridge.onrender.com',
     mlService: 'http://localhost:8001',
   },
   // Staging
@@ -38,7 +37,7 @@ const BACKEND_URLS = {
   // Production
   production: {
     base: 'https://sol-bridge.onrender.com',  // Using your deployed backend
-    mlService: 'https://ml.solarsharing.com',
+    mlService: 'https://solbridge-ai.onrender.com',
   },
 };
 
@@ -118,6 +117,7 @@ export const ENDPOINTS = {
     latest: '/iot/readings/latest',
     history: '/iot/readings/history',
     deviceCommand: '/iot/device-command',
+    deviceLatest: '/iot/device',
     registerDevice: '/iot/devices',
   },
 

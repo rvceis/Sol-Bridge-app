@@ -21,6 +21,7 @@ import {
   HomeScreen,
   EnergyScreen,
 } from '../screens/main';
+import AIInsightsScreen from '../screens/insights/AIInsightsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -152,6 +153,23 @@ const MainNavigator: React.FC = () => {
           }}
         />
       )}
+
+      <Tab.Screen
+        name="AI"
+        component={AIInsightsScreen}
+        options={{
+          tabBarLabel: 'AI',
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              size={size}
+              name="bulb-outline"
+              focusedName="bulb"
+            />
+          ),
+        }}
+      />
 
       <Tab.Screen
         name="Wallet"
