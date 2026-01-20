@@ -237,6 +237,45 @@ class IoTService {
   }
 
   /**
+   * Get device-specific production data
+   */
+  async getDeviceProduction(
+    deviceId: string,
+    startDate?: string,
+    endDate?: string,
+    interval: 'hourly' | 'daily' | 'weekly' = 'hourly'
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('interval', interval);
+
+    const queryString = queryParams.toString();
+    const url = `/iot/production/device/${deviceId}${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
+  }
+
+  /**
+   * Get combined production data (all devices)
+   */
+  async getCombinedProduction(
+    startDate?: string,
+    endDate?: string,
+    interval: 'hourly' | 'daily' | 'weekly' = 'hourly'
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('interval', interval);
+
+    const queryString = queryParams.toString();
+    const url = `/iot/production/combined${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
+  }
+
+  /**
    * Format power value for display
    */
   formatPower(watts: number): string {

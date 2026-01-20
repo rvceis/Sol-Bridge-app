@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { marketplaceApi } from '../../api/marketplaceService';
 import { useAuthStore } from '../../store';
+import { ProductionCard } from '../../components/cards/ProductionCard';
+import { TemperatureCard } from '../../components/cards/TemperatureCard';
 
 interface Device {
   device_id: string;
@@ -57,6 +59,7 @@ export default function DeviceManagementScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expandedDeviceId, setExpandedDeviceId] = useState<string | null>(null);
 
   // Form state
   const [deviceName, setDeviceName] = useState('');
@@ -242,55 +245,98 @@ export default function DeviceManagementScreen() {
     return deviceType?.label || type;
   };
 
-  const renderDeviceCard = ({ item }: { item: Device }) => (
-    <TouchableOpacity
-      style={styles.deviceCard}
-      onPress={() => openEditModal(item)}
-    >
-      <View style={styles.deviceIcon}>
-        <Ionicons
-          name={getDeviceIcon(item.device_type) as any}
-          size={32}
-          color="#4CAF50"
-        />
-      </View>
-
-      <View style={styles.deviceInfo}>
-        <Text style={styles.deviceName}>{item.device_name}</Text>
-        <Text style={styles.deviceType}>{getDeviceLabel(item.device_type)}</Text>
-        
-        <TouchableOpacity 
-          style={styles.deviceIdContainer}
-          onPress={() => copyToClipboard(item.device_id, 'Device ID')}
+  const renderDeviceCard = ({ item }: { item: Device }) => {
+    const isExpanded = expandedDeviceId === item.device_id;
+    
+    return (
+      <View style={styles.deviceCardContainer}>
+        <TouchableOpacity
+          style={styles.deviceCard}
+          onPress={() => setExpandedDeviceId(isExpanded ? null : item.device_id)}
         >
-          <Ionicons name="copy" size={11} color="#999" style={{ marginRight: 4 }} />
-          <Text style={styles.deviceId}>{item.device_id}</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.deviceStats}>
-          {item.capacity_kwh && (
-            <View style={styles.statBadge}>
-              <Ionicons name="flash" size={12} color="#FF9800" />
-              <Text style={styles.statText}>{item.capacity_kwh} kWh</Text>
-            </View>
-          )}
-          {item.efficiency_rating && (
-            <View style={styles.statBadge}>
-              <Ionicons name="speedometer" size={12} color="#2196F3" />
-              <Text style={styles.statText}>{item.efficiency_rating}%</Text>
-            </View>
-          )}
-        </View>
-      </View>
+          <View style={styles.deviceIcon}>
+            <Ionicons
+              name={getDeviceIcon(item.device_type) as any}
+              size={32}
+              color="#4CAF50"
+            />
+          </View>
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDelete(item)}
-      >
-        <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName}>{item.device_name}</Text>
+            <Text style={styles.deviceType}>{getDeviceLabel(item.device_type)}</Text>
+            
+            <TouchableOpacity 
+              style={styles.deviceIdContainer}
+              onPress={(e) => {
+                e.stopPropagation();
+                copyToClipboard(item.device_id, 'Device ID');
+              }}
+            >
+              <Ionicons name="copy" size={11} color="#999" style={{ marginRight: 4 }} />
+              <Text style={styles.deviceId}>{item.device_id}</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.deviceStats}>
+              {item.capacity_kwh && (
+                <View style={styles.statBadge}>
+                  <Ionicons name="flash" size={12} color="#FF9800" />
+                  <Text style={styles.statText}>{item.capacity_kwh} kWh</Text>
+                </View>
+              )}
+              {item.efficiency_rating && (
+                <View style={styles.statBadge}>
+                  <Ionicons name="speedometer" size={12} color="#2196F3" />
+                  <Text style={styles.statText}>{item.efficiency_rating}%</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.deviceActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                openEditModal(item);
+              }}
+            >
+              <Ionicons name="pencil" size={18} color="#2196F3" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDelete(item);
+              }}
+            >
+              <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+            </TouchableOpacity>
+          </View>
+
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color="#999" 
+          />
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={styles.productionContainer}>
+            <ProductionCard 
+              deviceId={item.device_id}
+              title="Production Data"
+              subtitle={item.device_name}
+            />
+            <TemperatureCard 
+              deviceId={item.device_id}
+              title="Device Temperature"
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -542,18 +588,39 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
+  deviceCardContainer: {
+    marginBottom: 12,
+  },
   deviceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  deviceActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginRight: 8,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productionContainer: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
   },
   deviceIcon: {
     width: 56,
@@ -612,9 +679,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#666',
     fontWeight: '500',
-  },
-  deleteButton: {
-    padding: 8,
   },
   emptyState: {
     flex: 1,

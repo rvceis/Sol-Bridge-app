@@ -682,12 +682,20 @@ export default function MarketplaceScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Energy Marketplace</Text>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => navigation.navigate('CreateListing' as never)}
-        >
-          <Ionicons name="add-circle" size={28} color="#4CAF50" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={() => navigation.navigate('FindEnergySources' as never)}
+          >
+            <Ionicons name="search" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={() => navigation.navigate('CreateListing' as never)}
+          >
+            <Ionicons name="add-circle" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search & Filter Bar */}

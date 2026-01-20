@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography, layout } from '../../theme';
 import { useDeviceStore } from '../../store';
+import { ProductionCard } from '../../components/cards/ProductionCard';
 
 type NavigationProp = NativeStackNavigationProp<DeviceStackParamList, 'DeviceDetail'>;
 
@@ -368,6 +369,17 @@ const DeviceDetailScreen: React.FC<{ route: any }> = ({ route }) => {
           </LinearGradient>
         </Animated.View>
 
+        {/* Production Data Card */}
+        {!isEditing && device.device_id && (
+          <View style={styles.productionSection}>
+            <ProductionCard 
+              deviceId={device.device_id}
+              title="Live Production"
+              subtitle={device.device_id}
+            />
+          </View>
+        )}
+
         {/* Action Buttons */}
         {isEditing && (
           <View style={styles.actionButtons}>
@@ -618,6 +630,9 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     ...typography.textStyles.buttonMedium,
     color: colors.error.main,
+  },
+  productionSection: {
+    marginBottom: spacing.lg,
   },
 });
 
