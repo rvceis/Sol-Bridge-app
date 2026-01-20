@@ -399,7 +399,7 @@ export default function FindEnergySourcesScreen() {
     }
   };
 
-  const getMatchScoreColor = (score: number) => {
+  const getMatchScoreColor = (score: number): [string, string] => {
     if (score >= 80) return ['#4CAF50', '#81C784'];
     if (score >= 60) return ['#FF9800', '#FFB74D'];
     return ['#F44336', '#E57373'];
