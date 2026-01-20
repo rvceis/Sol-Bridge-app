@@ -11,6 +11,9 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  Clipboard,
+  ToastAndroid,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -86,6 +89,15 @@ export default function DeviceManagementScreen() {
     loadDevices();
   };
 
+  const copyToClipboard = (text: string, label: string = 'Copied') => {
+    Clipboard.setString(text);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(`${label}: ${text}`, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Success', `${label} copied to clipboard`);
+    }
+  };
+
   const resetForm = () => {
     setDeviceName('');
     setDeviceType('solar_panel');
@@ -158,8 +170,32 @@ export default function DeviceManagementScreen() {
         Alert.alert('Success', 'Device updated successfully');
       } else {
         // Create new device
-        await marketplaceApi.createDevice(deviceData);
-        Alert.alert('Success', 'Device added successfully');
+        const response = await marketplaceApi.createDevice(deviceData);
+        const createdDevice = response?.data;
+        const deviceId = createdDevice?.device_id || 'Generated successfully';
+        Alert.alert(
+          'Success',
+          `Device added successfully!\n\nDevice ID: ${deviceId}`,
+          [
+            {
+              text: 'Copy ID',
+              onPress: () => {
+                // Copy to clipboard
+                require('react-native').Clipboard.setString(deviceId);
+                Alert.alert('Copied', 'Device ID copied to clipboard');
+              },
+            },
+            {
+              text: 'OK',
+              onPress: () => {
+                setModalVisible(false);
+                resetForm();
+                loadDevices();
+              },
+            },
+          ]
+        );
+        return;
       }
 
       setModalVisible(false);
@@ -222,6 +258,14 @@ export default function DeviceManagementScreen() {
       <View style={styles.deviceInfo}>
         <Text style={styles.deviceName}>{item.device_name}</Text>
         <Text style={styles.deviceType}>{getDeviceLabel(item.device_type)}</Text>
+        
+        <TouchableOpacity 
+          style={styles.deviceIdContainer}
+          onPress={() => copyToClipboard(item.device_id, 'Device ID')}
+        >
+          <Ionicons name="copy" size={11} color="#999" style={{ marginRight: 4 }} />
+          <Text style={styles.deviceId}>{item.device_id}</Text>
+        </TouchableOpacity>
         
         <View style={styles.deviceStats}>
           {item.capacity_kwh && (
@@ -533,6 +577,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginBottom: 8,
+  },
+  deviceIdContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  deviceId: {
+    fontSize: 11,
+    color: '#999',
+    fontFamily: 'Courier New',
+    flex: 1,
   },
   deviceStats: {
     flexDirection: 'row',
