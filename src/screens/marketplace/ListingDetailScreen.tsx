@@ -478,8 +478,18 @@ export default function ListingDetailScreen() {
     if (paymentMethod !== 'wallet') {
       const pretty = paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Card' : 'NetBanking';
       Alert.alert(
-        `${pretty} Coming Soon`,
-        `Payment via ${pretty} will be available shortly. Please use Wallet for now.`
+        'Wallet Payment Only',
+        `Direct ${pretty} payment integration is not yet implemented. Please use your wallet balance to complete this purchase.`,
+        [
+          { text: 'OK', style: 'cancel' },
+          { 
+            text: 'Top Up Wallet', 
+            onPress: () => {
+              setShowBuyModal(false);
+              navigation.navigate('Wallet' as never, { screen: 'TopUp' } as never);
+            }
+          },
+        ]
       );
       return;
     }
@@ -495,7 +505,7 @@ export default function ListingDetailScreen() {
             text: 'Top Up', 
             onPress: () => {
               setShowBuyModal(false);
-              navigation.navigate('TopUp' as never);
+              navigation.navigate('Wallet' as never, { screen: 'TopUp' } as never);
             }
           },
         ]

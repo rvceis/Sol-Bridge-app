@@ -23,6 +23,7 @@ import { paymentService } from '../../services/paymentService';
 import { notificationService } from '../../services/notificationService';
 import { useWalletStore } from '../../store/walletStore';
 import { useAuthStore } from '../../store/authStore';
+import { walletService } from '../../api/walletService';
 
 const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000];
 
@@ -80,6 +81,13 @@ export default function TopUpScreen({ navigation }: any) {
       const orderData = await paymentService.createTopupOrder(topUpAmount);
       console.log('[TopUp] Order created:', orderData.orderId);
 
+      // Check if test mode
+      if (orderData.testMode) {
+        console.log('[TopUp] Test mode detected - simulating payment');
+        await handleTestPayment(orderData.orderId, topUpAmount);
+        return;
+      }
+
       // Step 2: Open Razorpay Checkout
       const options = {
         description: 'Wallet Top-up',
@@ -116,7 +124,35 @@ export default function TopUpScreen({ navigation }: any) {
       setLoading(false);
     }
   };
+  const handleTestPayment = async (orderId: string, topUpAmount: number) => {
+    try {
+      // Call test payment endpoint
+      const response = await walletService.completeTestPayment(orderId);
+      
+      if (response.success) {
+        await notificationService.showPaymentSuccess(topUpAmount);
+        await fetchBalance();
 
+        Alert.alert(
+          'Success! \ud83c\udf89',
+          `\u20b9${topUpAmount} has been added to your wallet (Test Mode)`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      } else {
+        throw new Error('Test payment failed');
+      }
+    } catch (error: any) {
+      console.error('[TopUp] Test payment error:', error);
+      Alert.alert('Payment Failed', error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
   const verifyPayment = async (paymentData: any) => {
     try {
       setLoading(true);

@@ -115,6 +115,13 @@ class WalletService {
   }
 
   /**
+   * Complete test payment (test mode only)
+   */
+  async completeTestPayment(orderId: string): Promise<ApiResponse<any>> {
+    return api.post<any>('/payment/test/complete-payment', { order_id: orderId });
+  }
+
+  /**
    * Get transaction summary for a period
    */
   async getTransactionSummary(period: 'day' | 'week' | 'month' | 'year'): Promise<{

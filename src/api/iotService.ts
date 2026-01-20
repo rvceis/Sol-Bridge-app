@@ -133,6 +133,35 @@ class IoTService {
   }
 
   /**
+   * Get device-specific latest reading (real-time)
+   */
+  async getDeviceLatest(deviceId: string): Promise<ApiResponse<any>> {
+    return api.get<any>(`${ENDPOINTS.iot.deviceLatest}/${deviceId}/latest`);
+  }
+
+  /**
+   * Get raw readings for analytics (all individual measurements, no aggregation)
+   */
+  async getRawReadings(
+    deviceId?: string,
+    startDate?: string,
+    endDate?: string,
+    limit: number = 1000
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('limit', limit.toString());
+
+    const queryString = queryParams.toString();
+    const url = deviceId
+      ? `/iot/device/${deviceId}/raw${queryString ? `?${queryString}` : ''}`
+      : `/iot/raw${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
+  }
+
+  /**
    * Get today's energy summary
    */
   async getTodaySummary(deviceId?: string): Promise<ApiResponse<DailyEnergySummary>> {

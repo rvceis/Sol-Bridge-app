@@ -9,6 +9,7 @@ export interface RazorpayOrderResponse {
   amount: number;
   currency: string;
   key_id: string;
+  testMode?: boolean;
 }
 
 export interface PaymentVerification {

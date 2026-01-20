@@ -13,9 +13,13 @@ import { useAuthStore } from '../../store';
 
 interface ProductionData {
   total_energy_kwh: number;
+  total_energy_wh?: number;
   avg_power_kw: number;
+  avg_power_w?: number;
   max_power_kw: number;
+  max_power_w?: number;
   reading_count: number;
+  scale?: 'watts' | 'kilowatts';
 }
 
 interface ProductionCardProps {
@@ -40,7 +44,14 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({
 
   useEffect(() => {
     loadProductionData();
-  }, [deviceId]);
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadProductionData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [deviceId, showCombined]);
 
   const loadProductionData = async () => {
     try {
@@ -121,21 +132,27 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Total Energy</Text>
           <Text style={styles.statValue}>
-            {data.total_energy_kwh.toFixed(2)} kWh
+            {data.scale === 'watts' && data.total_energy_wh 
+              ? `${data.total_energy_wh.toFixed(2)} Wh`
+              : `${data.total_energy_kwh.toFixed(4)} kWh`}
           </Text>
         </View>
 
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Avg Power</Text>
           <Text style={styles.statValue}>
-            {data.avg_power_kw.toFixed(2)} kW
+            {data.scale === 'watts' && data.avg_power_w
+              ? `${data.avg_power_w.toFixed(2)} W`
+              : `${data.avg_power_kw.toFixed(4)} kW`}
           </Text>
         </View>
 
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Max Power</Text>
           <Text style={styles.statValue}>
-            {data.max_power_kw.toFixed(2)} kW
+            {data.scale === 'watts' && data.max_power_w
+              ? `${data.max_power_w.toFixed(2)} W`
+              : `${data.max_power_kw.toFixed(4)} kW`}
           </Text>
         </View>
       </View>
