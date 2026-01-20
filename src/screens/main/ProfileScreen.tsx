@@ -143,9 +143,7 @@ const ProfileScreen: React.FC = () => {
 
   const handleMenuItem = async (screenName: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Map Documents to DocumentsManagement for full management UI
-    const routeName = screenName === 'Documents' ? 'DocumentsManagement' : screenName;
-    (navigation as any).navigate(routeName);
+    (navigation as any).navigate(screenName);
   };
 
   return (

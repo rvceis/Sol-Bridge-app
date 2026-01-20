@@ -10,7 +10,6 @@ import PersonalInformationScreen from '../screens/profile/PersonalInformationScr
 import AddressScreen from '../screens/profile/AddressScreen';
 import PaymentMethodsScreen from '../screens/profile/PaymentMethodsScreen';
 import DocumentsScreen from '../screens/profile/DocumentsScreen';
-import DocumentsManagementScreen from '../screens/profile/DocumentsManagementScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
 import SecurityScreen from '../screens/profile/SecurityScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
@@ -21,7 +20,6 @@ export type ProfileStackParamList = {
   Address: undefined;
   PaymentMethods: undefined;
   Documents: undefined;
-  DocumentsManagement: undefined;
   Notifications: undefined;
   Security: undefined;
   Settings: undefined;
@@ -155,11 +153,7 @@ export const ProfileNavigator: React.FC = () => {
           },
         })}
       />
-      <Stack.Screen 
-        name="DocumentsManagement" 
-        component={DocumentsManagementScreen}
-        options={{ headerShown: false }}
-      />
+      {/* Removed DocumentsManagement screen: using DocumentsScreen only */}
       <Stack.Screen 
         name="Notifications" 
         component={NotificationsScreen}

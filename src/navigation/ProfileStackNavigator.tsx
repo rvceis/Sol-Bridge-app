@@ -5,7 +5,6 @@ import PersonalInformationScreen from '../screens/profile/PersonalInformationScr
 import AddressScreen from '../screens/profile/AddressScreen';
 import PaymentMethodsScreen from '../screens/profile/PaymentMethodsScreen';
 import DocumentsScreen from '../screens/profile/DocumentsScreen';
-import DocumentsManagementScreen from '../screens/profile/DocumentsManagementScreen';
 import NotificationsScreen from '../screens/profile/NotificationsScreen';
 import SecurityScreen from '../screens/profile/SecurityScreen';
 
@@ -23,7 +22,6 @@ export function ProfileStackNavigator() {
       <Stack.Screen name="Address" component={AddressScreen} />
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <Stack.Screen name="Documents" component={DocumentsScreen} />
-      <Stack.Screen name="DocumentsManagement" component={DocumentsManagementScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
     </Stack.Navigator>

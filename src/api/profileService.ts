@@ -97,30 +97,9 @@ export const profileApi = {
     return response.data;
   },
 
-  // Get documents
-  getDocuments: async () => {
-    const response = await apiClient.get('/profile/documents');
-    return response.data;
-  },
-
-  // Upload document
-  uploadDocument: async (file: any, documentType: string, documentName: string) => {
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('document_type', documentType);
-    formData.append('document_name', documentName);
-
-    const response = await apiClient.post('/profile/documents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
   // Delete document
   deleteDocument: async (id: string) => {
-    const response = await apiClient.delete(`/profile/documents/${id}`);
+    const response = await apiClient.delete(`/users/documents/${id}`);
     return response.data;
   },
 
