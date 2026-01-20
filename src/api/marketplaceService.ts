@@ -173,6 +173,56 @@ export const marketplaceApi = {
     return response.data;
   },
 
+  // ===== AI MATCHING API =====
+
+  // Find best seller matches for buyer's energy requirement
+  findSellerMatches: async (payload: {
+    requiredKwh: number;
+    maxPrice?: number;
+    preferences?: {
+      renewable?: boolean;
+      minRating?: number;
+      maxDistance?: number;
+    };
+  }) => {
+    const response = await apiClient.post('/matching/find-sellers', payload);
+    return response.data;
+  },
+
+  // Find best buyer matches for seller's energy production
+  findBuyerMatches: async (payload: {
+    availableKwh: number;
+    pricePerKwh?: number;
+  }) => {
+    const response = await apiClient.post('/matching/find-buyers', payload);
+    return response.data;
+  },
+
+  // Get detailed match breakdown with all scoring factors
+  getMatchDetails: async (matchId: string) => {
+    const response = await apiClient.get(`/matching/matches/${matchId}`);
+    return response.data;
+  },
+
+  // Create smart energy allocation based on matches
+  createSmartAllocation: async (payload: {
+    requiredKwh: number;
+    maxPrice?: number;
+    preferences?: {
+      renewable?: boolean;
+      minRating?: number;
+    };
+  }) => {
+    const response = await apiClient.post('/matching/allocate', payload);
+    return response.data;
+  },
+
+  // Get active allocations for user
+  getActiveAllocations: async () => {
+    const response = await apiClient.get('/matching/allocations/active');
+    return response.data;
+  },
+
   // ===== Energy Sources API (For Buyers) =====
   
   // Find matching energy sources (hosts) based on preferences

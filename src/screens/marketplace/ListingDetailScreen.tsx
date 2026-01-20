@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import RazorpayCheckout from 'react-native-razorpay';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { api } from '../../api';
 import { paymentService } from '../../services/paymentService';
 import { notificationService } from '../../services/notificationService';
 import { useAuthStore } from '../../store/authStore';
@@ -521,6 +522,12 @@ export default function ListingDetailScreen() {
         energy_amount_kwh: amount,
       });
 
+      // Generate transaction report (fire and forget - don't wait)
+      if (response.data?.transaction_id) {
+        api.get(`/report/transaction/${response.data.transaction_id}`)
+          .catch(err => console.log('Report generation failed:', err));
+      }
+
       // Show success notification
       await notificationService.scheduleNotification(
         'Purchase Successful! ⚡',
@@ -541,8 +548,24 @@ export default function ListingDetailScreen() {
       );
       setShowBuyModal(false);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 'Failed to complete purchase';
-      Alert.alert('Purchase Failed', errorMsg);
+      console.error('Purchase error:', error);
+      
+      // Extract error message from various possible response structures
+      let errorMsg = 'Failed to complete purchase';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        errorMsg = data.error || data.message || errorMsg;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      // Show user-friendly error message
+      Alert.alert(
+        'Purchase Failed',
+        errorMsg,
+        [{ text: 'OK', style: 'cancel' }]
+      );
     } finally {
       setPurchasing(false);
     }
@@ -560,10 +583,13 @@ export default function ListingDetailScreen() {
     return null;
   }
 
-  const totalPrice = safeCalculate(listing.energy_amount_kwh, listing.price_per_kwh);
-  const purchaseTotal = purchaseAmount
-    ? safeCalculate(parseFloat(purchaseAmount), listing.price_per_kwh)
+  const totalPrice = (listing.energy_amount_kwh || 0) * (listing.price_per_kwh || 0);
+  const purchaseAmount_num = purchaseAmount ? parseFloat(purchaseAmount) : 0;
+  const purchaseTotal = purchaseAmount_num > 0
+    ? purchaseAmount_num * (listing.price_per_kwh || 0)
     : 0;
+  const platformFee = purchaseTotal * 0.05;
+  const grandTotal = purchaseTotal + platformFee;
 
   return (
     <View style={styles.container}>
@@ -807,12 +833,16 @@ export default function ListingDetailScreen() {
                     <Text style={styles.summaryValue}>{safeFormatCurrency(listing.price_per_kwh)}</Text>
                   </View>
                   <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Subtotal</Text>
+                    <Text style={styles.summaryValue}>{safeFormatCurrency(purchaseTotal)}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Platform Fee (5%)</Text>
-                    <Text style={styles.summaryValue}>{safeFormatCurrency(purchaseTotal * 0.05)}</Text>
+                    <Text style={styles.summaryValue}>{safeFormatCurrency(platformFee)}</Text>
                   </View>
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total Amount</Text>
-                    <Text style={styles.totalValue}>{safeFormatCurrency(purchaseTotal * 1.05)}</Text>
+                    <Text style={styles.totalValue}>{safeFormatCurrency(grandTotal)}</Text>
                   </View>
                 </View>
               )}

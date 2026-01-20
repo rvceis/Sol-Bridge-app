@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { locationApi } from '../../api/locationService';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { api } from '../../api';
 import { safeToFixed } from '../../utils/formatters';
 
 interface Allocation {
@@ -109,24 +110,17 @@ export default function SmartAllocationScreen() {
       return;
     }
 
-    if (!location) {
-      Alert.alert('Location Required', 'Please enable location access');
-      return;
-    }
-
     setLoading(true);
     try {
-      const response = await locationApi.getOptimalAllocation(
-        parseFloat(energyNeeded),
-        location.latitude,
-        location.longitude,
-        {
-          max_distance: maxDistance ? parseInt(maxDistance) : undefined,
-          max_price: maxPrice ? parseFloat(maxPrice) : undefined,
-          prefer_renewable: preferRenewable,
-          min_rating: minRating ? parseFloat(minRating) : undefined,
-        }
-      );
+      // Use AI matching to find best sellers for buyer's energy requirement
+      const response = await marketplaceApi.createSmartAllocation({
+        requiredKwh: parseFloat(energyNeeded),
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        preferences: {
+          renewable: preferRenewable,
+          minRating: minRating ? parseFloat(minRating) : undefined,
+        },
+      });
 
       setResult(response.data);
     } catch (error: any) {
@@ -156,11 +150,17 @@ export default function SmartAllocationScreen() {
             try {
               // Purchase from each allocation
               for (const alloc of result.allocation) {
-                await marketplaceApi.buyEnergy({
+                const response = await marketplaceApi.buyEnergy({
                   listing_id: alloc.listing_id,
                   energy_amount_kwh: alloc.energy_kwh,
                   payment_method_id: selectedPaymentMethod,
                 });
+                
+                // Generate report for each transaction (fire and forget)
+                if (response.data?.transaction_id) {
+                  api.get(`/report/transaction/${response.data.transaction_id}`)
+                    .catch(err => console.log('Report generation failed:', err));
+                }
               }
 
               Alert.alert(
@@ -171,8 +171,24 @@ export default function SmartAllocationScreen() {
               setResult(null);
               setEnergyNeeded('');
             } catch (error: any) {
-              const message = error.response?.data?.error || 'Purchase failed';
-              Alert.alert('Error', message);
+              console.error('Smart allocation purchase error:', error);
+              
+              // Extract error message from various possible response structures
+              let errorMsg = 'Purchase failed';
+              
+              if (error.response?.data) {
+                const data = error.response.data;
+                errorMsg = data.error || data.message || errorMsg;
+              } else if (error.message) {
+                errorMsg = error.message;
+              }
+              
+              // Show user-friendly error message
+              Alert.alert(
+                'Purchase Failed',
+                errorMsg,
+                [{ text: 'OK', style: 'cancel' }]
+              );
             } finally {
               setPurchasing(false);
             }

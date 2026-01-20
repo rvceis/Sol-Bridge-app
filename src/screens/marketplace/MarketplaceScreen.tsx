@@ -15,8 +15,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { useAuthStore } from '../../store';
 import { useResponsive } from '../../hooks/useResponsive';
 import { safeToFixed } from '../../utils/formatters';
 
@@ -41,6 +43,8 @@ interface Listing {
 export default function MarketplaceScreen() {
   const responsive = useResponsive();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const user = useAuthStore((state) => state.user);
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -680,21 +684,17 @@ export default function MarketplaceScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.headerTitle}>Energy Marketplace</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={() => navigation.navigate('FindEnergySources' as never)}
-          >
-            <Ionicons name="search" size={24} color="#4CAF50" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={() => navigation.navigate('CreateListing' as never)}
-          >
-            <Ionicons name="add-circle" size={24} color="#007AFF" />
-          </TouchableOpacity>
+          {user?.role !== 'buyer' && (
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={() => navigation.navigate('CreateListing' as never)}
+            >
+              <Ionicons name="add-circle" size={24} color="#007AFF" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -792,7 +792,7 @@ export default function MarketplaceScreen() {
           data={filteredListings}
           renderItem={renderListingCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

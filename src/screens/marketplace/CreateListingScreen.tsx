@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { marketplaceApi } from '../../api/marketplaceService';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -26,6 +27,7 @@ interface Device {
 export default function CreateListingScreen() {
   const responsive = useResponsive();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
 
@@ -52,8 +54,9 @@ export default function CreateListingScreen() {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      paddingTop: insets.top + 12,
       paddingHorizontal: responsive.screenPadding,
-      paddingVertical: responsive.screenPadding,
+      paddingBottom: responsive.screenPadding,
       backgroundColor: '#FFF',
       borderBottomWidth: 1,
       borderBottomColor: '#EEE',

@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../api/client';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useAuthStore } from '../../store';
@@ -40,6 +41,7 @@ export default function AIInsightsScreen() {
   const responsive = useResponsive();
   const navigation = useNavigation();
   const user = useAuthStore((state) => state.user);
+  const insets = useSafeAreaInsets();
 
   const [solarForecast, setSolarForecast] = useState<Forecast[]>([]);
   const [demandForecast, setDemandForecast] = useState<Forecast[]>([]);
@@ -65,8 +67,9 @@ export default function AIInsightsScreen() {
       color: '#666',
     },
     header: {
+      paddingTop: insets.top || 16,
       paddingHorizontal: responsive.screenPadding,
-      paddingVertical: responsive.screenPadding * 1.5,
+      paddingBottom: responsive.screenPadding,
       backgroundColor: '#FFF',
       borderBottomWidth: 1,
       borderBottomColor: '#EEE',
@@ -89,7 +92,7 @@ export default function AIInsightsScreen() {
       paddingHorizontal: responsive.screenPadding,
     },
     tab: {
-      paddingVertical: responsive.screenPadding,
+      paddingVertical: responsive.gridGap,
       paddingHorizontal: responsive.gridGap,
       borderBottomWidth: 3,
       borderBottomColor: 'transparent',
@@ -234,10 +237,9 @@ export default function AIInsightsScreen() {
   }
 
   const renderSolarForecast = () => (
-    <View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>⚡ 24-Hour Solar Forecast</Text>
-        {solarForecast.length > 0 ? (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>⚡ 24-Hour Solar Forecast</Text>
+      {solarForecast.length > 0 ? (
           <>
             {solarForecast.slice(0, 6).map((forecast, idx) => (
               <View key={idx} style={styles.statRow}>
@@ -257,15 +259,48 @@ export default function AIInsightsScreen() {
             <Text style={styles.emptyText}>No forecast data available</Text>
           </View>
         )}
-      </View>
+    </View>
+  );
+
+  const renderDemandForecast = () => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>📊 Demand Forecast</Text>
+      {demandForecast.length > 0 ? (
+        <>
+          {demandForecast.slice(0, 6).map((forecast, idx) => {
+            const power =
+              forecast.predicted_demand ??
+              forecast.predicted_load ??
+              forecast.predicted_power ??
+              forecast.value ?? 0;
+            return (
+              <View key={idx} style={styles.statRow}>
+                <Text style={styles.statLabel}>{new Date(forecast.timestamp).toLocaleTimeString()}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.statValue}>{safeToFixed(power, 2)} kW</Text>
+                  {forecast.confidence !== undefined && (
+                    <View style={styles.confidenceBadge}>
+                      <Text style={styles.confidenceText}>{safeToFixed((forecast.confidence || 0) * 100, 0)}%</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </>
+      ) : (
+        <View style={styles.emptyState}>
+          <Ionicons name="pulse" size={32} color="#CCC" />
+          <Text style={styles.emptyText}>No demand forecast data</Text>
+        </View>
+      )}
     </View>
   );
 
   const renderWeather = () => (
-    <View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>☀️ Solar Radiation (Daytime)</Text>
-        {solarRadiation && new Date().getHours() >= 6 && new Date().getHours() <= 18 ? (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>☀️ Solar Radiation (Daytime)</Text>
+      {solarRadiation && new Date().getHours() >= 6 && new Date().getHours() <= 18 ? (
           <>
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>UV Index</Text>
@@ -288,15 +323,13 @@ export default function AIInsightsScreen() {
             <Text style={styles.emptyText}>Solar radiation data only available during daytime (6 AM - 6 PM)</Text>
           </View>
         )}
-      </View>
     </View>
   );
 
   const renderAnomalies = () => (
-    <View>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>⚠️ Detected Anomalies</Text>
-        {anomalies.length > 0 ? (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>⚠️ Detected Anomalies</Text>
+      {anomalies.length > 0 ? (
           anomalies.slice(0, 5).map((anomaly, idx) => (
             <View key={idx} style={styles.anomalyItem}>
               <Text style={styles.anomalyText}>{anomaly.type}: {anomaly.message}</Text>
@@ -311,7 +344,6 @@ export default function AIInsightsScreen() {
             <Text style={styles.emptyText}>No anomalies detected</Text>
           </View>
         )}
-      </View>
     </View>
   );
 
@@ -346,21 +378,13 @@ export default function AIInsightsScreen() {
       {/* Content */}
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 16 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {selectedTab === 'solar' && renderSolarForecast()}
         {selectedTab === 'weather' && renderWeather()}
         {selectedTab === 'anomalies' && renderAnomalies()}
-        {selectedTab === 'demand' && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>📊 Demand Forecast</Text>
-            <View style={styles.emptyState}>
-              <Ionicons name="pulse" size={32} color="#CCC" />
-              <Text style={styles.emptyText}>Coming soon</Text>
-            </View>
-          </View>
-        )}
+        {selectedTab === 'demand' && renderDemandForecast()}
       </ScrollView>
     </View>
   );
