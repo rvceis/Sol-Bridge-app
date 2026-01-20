@@ -9,9 +9,12 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, STORAGE_KEYS } from '../../api/config';
@@ -39,6 +42,85 @@ export default function DocumentUploadModal({ visible, onClose, onSuccess }: Doc
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const requestPermissions = async () => {
+    if (Platform.OS !== 'web') {
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (cameraStatus !== 'granted' || mediaStatus !== 'granted') {
+        Alert.alert(
+          'Permissions Required',
+          'Camera and photo library access is needed to capture documents.'
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleTakePhoto = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+        aspect: [4, 3],
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setSelectedFile({
+          uri: asset.uri,
+          name: `photo_${Date.now()}.jpg`,
+          size: asset.fileSize || 0,
+          type: 'image/jpeg',
+        });
+        
+        if (!documentName) {
+          const typeLabel = DOCUMENT_TYPES.find(t => t.value === selectedType)?.label || 'Document';
+          setDocumentName(`${typeLabel} - ${new Date().toLocaleDateString()}`);
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to take photo');
+      console.error('Camera error:', error);
+    }
+  };
+
+  const handlePickImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setSelectedFile({
+          uri: asset.uri,
+          name: `image_${Date.now()}.jpg`,
+          size: asset.fileSize || 0,
+          type: asset.type === 'video' ? 'video/mp4' : 'image/jpeg',
+        });
+        
+        if (!documentName) {
+          const typeLabel = DOCUMENT_TYPES.find(t => t.value === selectedType)?.label || 'Document';
+          setDocumentName(`${typeLabel} - ${new Date().toLocaleDateString()}`);
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+      console.error('Image picker error:', error);
+    }
+  };
+
   const handlePickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -65,6 +147,31 @@ export default function DocumentUploadModal({ visible, onClose, onSuccess }: Doc
       Alert.alert('Error', 'Failed to pick document');
       console.error('Document picker error:', error);
     }
+  };
+
+  const showPickerOptions = () => {
+    Alert.alert(
+      'Select Source',
+      'Choose how you want to add your document',
+      [
+        {
+          text: 'Take Photo',
+          onPress: handleTakePhoto,
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: handlePickImage,
+        },
+        {
+          text: 'Browse Files (PDF)',
+          onPress: handlePickDocument,
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+    );
   };
 
   const handleUpload = async () => {
@@ -201,7 +308,7 @@ export default function DocumentUploadModal({ visible, onClose, onSuccess }: Doc
             <Text style={styles.sectionTitle}>Select File *</Text>
             <TouchableOpacity
               style={[styles.filePicker, selectedFile && styles.filePickerSelected]}
-              onPress={handlePickDocument}
+              onPress={showPickerOptions}
               disabled={loading}
             >
               <Ionicons
@@ -210,12 +317,19 @@ export default function DocumentUploadModal({ visible, onClose, onSuccess }: Doc
                 color={selectedFile ? '#4CAF50' : '#007AFF'}
               />
               <Text style={styles.filePickerText}>
-                {selectedFile ? selectedFile.name : 'Choose PDF or Image'}
+                {selectedFile ? selectedFile.name : 'Take Photo or Choose File'}
               </Text>
               <Text style={styles.filePickerSubtext}>
-                {selectedFile ? `Size: ${getFileSizeDisplay(selectedFile.size)}` : 'Tap to browse'}
+                {selectedFile ? `Size: ${getFileSizeDisplay(selectedFile.size)}` : 'Camera, Gallery, or PDF'}
               </Text>
             </TouchableOpacity>
+            
+            {/* Image Preview */}
+            {selectedFile && selectedFile.type?.startsWith('image/') && (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedFile.uri }} style={styles.imagePreview} />
+              </View>
+            )}
           </View>
 
           {/* File Details */}
@@ -416,6 +530,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#1976D2',
     fontWeight: '500',
+  },
+  imagePreviewContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'contain',
+    backgroundColor: '#F9F9F9',
   },
   footer: {
     flexDirection: 'row',

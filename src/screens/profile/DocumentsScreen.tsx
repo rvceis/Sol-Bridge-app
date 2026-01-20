@@ -1,17 +1,21 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Animated, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Animated, StyleSheet, ActivityIndicator, Alert, Image } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { profileApi } from '../../api/profileService';
 import DocumentUploadModal from '../../components/modals/DocumentUploadModal';
+import { API_BASE_URL } from '../../api/config';
 
 interface Document {
   id: string;
   document_type: string;
   document_name: string;
   file_path: string;
+  file_size?: number;
+  mime_type?: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   created_at: string;
+  rejection_reason?: string;
 }
 
 export default function DocumentsScreen() {
@@ -81,17 +85,34 @@ export default function DocumentsScreen() {
 
   const getDocumentIcon = (type: string) => {
     switch (type.toLowerCase()) {
+      case 'identity':
       case 'identity_proof':
       case 'aadhar':
+      case 'aadhaar':
       case 'pan':
+      case 'pan_card':
         return 'id-card';
       case 'address_proof':
         return 'home';
       case 'bank_details':
+      case 'bank_statement':
         return 'cash';
       default:
         return 'document-text';
     }
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    Alert.alert(
+      doc.document_name,
+      `Type: ${doc.document_type}\nStatus: ${doc.verification_status}\nUploaded: ${new Date(doc.created_at).toLocaleDateString()}${doc.rejection_reason ? `\n\nRejection Reason: ${doc.rejection_reason}` : ''}`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const isImageDocument = (doc: Document) => {
+    return doc.mime_type?.startsWith('image/') || 
+           doc.file_path?.match(/\.(jpg|jpeg|png|gif)$/i);
   };
 
   return (
@@ -113,16 +134,22 @@ export default function DocumentsScreen() {
         </View>
       ) : (
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Uploaded Documents</Text>
-
-          {documents.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="document-text-outline" size={48} color="#CCC" />
-              <Text style={styles.emptyText}>No documents uploaded</Text>
-            </View>
-          ) : (
-            documents.map((doc) => (
-              <View key={doc.id} style={styles.documentCard}>
+          {documents.map((doc) => (
+            <TouchableOpacity 
+              key={doc.id} 
+              style={styles.documentCard}
+              onPress={() => handleViewDocument(doc)}
+              activeOpacity={0.7}
+            >
+              {/* Document Icon or Image Thumbnail */}
+              {isImageDocument(doc) ? (
+                <View style={styles.documentIcon}>
+                  <Image
+                    source={{ uri: `${API_BASE_URL}${doc.file_path}` }}
+                    style={styles.documentThumbnail}
+                  />
+                </View>
+              ) : (
                 <View style={[
                   styles.documentIcon,
                   { backgroundColor: doc.verification_status === 'verified' ? '#E8F5E9' : '#FFF3E0' }
@@ -133,21 +160,34 @@ export default function DocumentsScreen() {
                     color={getStatusColor(doc.verification_status)}
                   />
                 </View>
-                <View style={styles.documentInfo}>
-                  <Text style={styles.documentName}>{doc.document_name}</Text>
+              )}
+              
+              <View style={styles.documentInfo}>
+                <Text style={styles.documentName}>{doc.document_name}</Text>
+                <Text style={styles.documentType}>{doc.document_type.replace('_', ' ')}</Text>
+                <View style={styles.statusRow}>
+                  <Ionicons
+                    name={doc.verification_status === 'verified' ? 'checkmark-circle' : 
+                          doc.verification_status === 'rejected' ? 'close-circle' : 'time'}
+                    size={14}
+                    color={getStatusColor(doc.verification_status)}
+                  />
                   <Text style={[styles.documentStatus, { color: getStatusColor(doc.verification_status) }]}>
                     {doc.verification_status.charAt(0).toUpperCase() + doc.verification_status.slice(1)}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  onPress={() => handleDeleteDocument(doc.id, doc.document_name)}
-                  style={styles.deleteButton}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
-                </TouchableOpacity>
               </View>
-            ))
-          )}
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDeleteDocument(doc.id, doc.document_name);
+                }}
+                style={styles.deleteButton}
+              >
+                <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
 
           <TouchableOpacity
             style={styles.addButton}
@@ -205,22 +245,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  emptyState: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    marginTop: 16,
-    fontSize: 14,
-    color: '#999',
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,6 +262,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  documentThumbnail: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   documentInfo: {
     flex: 1,
@@ -245,10 +275,23 @@ const styles = StyleSheet.create({
   documentName: {
     fontSize: 14,
     fontWeight: '600',
+    marginBottom: 2,
+    color: '#333',
+  },
+  documentType: {
+    fontSize: 12,
+    color: '#999',
     marginBottom: 4,
+    textTransform: 'capitalize',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   documentStatus: {
     fontSize: 12,
+    fontWeight: '500',
   },
   deleteButton: {
     padding: 8,
