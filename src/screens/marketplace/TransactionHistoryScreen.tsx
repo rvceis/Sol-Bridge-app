@@ -290,13 +290,16 @@ export default function TransactionHistoryScreen() {
       setTransactions(data);
       
       // Calculate stats
-      const totalEnergy = data.reduce((sum: number, t: Transaction) => sum + parseFloat(String(t.energy_amount_kwh)), 0);
+      const toNumber = (val: any) => {
+        const num = Number(val);
+        return Number.isFinite(num) ? num : 0;
+      };
+
+      const totalEnergy = data.reduce((sum: number, t: Transaction) => sum + toNumber(t.energy_amount_kwh), 0);
       const totalAmount = data.reduce((sum: number, t: Transaction) => {
-        if (activeTab === 'buyer') {
-          return sum + parseFloat(String(t.total_price));
-        } else {
-          return sum + (parseFloat(String(t.total_price)) - parseFloat(String(t.platform_fee)));
-        }
+        const price = toNumber(t.total_price);
+        const fee = toNumber(t.platform_fee);
+        return sum + (activeTab === 'buyer' ? price : price - fee);
       }, 0);
       
       setStats({
@@ -533,7 +536,10 @@ export default function TransactionHistoryScreen() {
             <Text style={styles.statLabel}>Total Energy</Text>
             <Text style={styles.statValue}>
               {safeToFixed(transactions
-                .reduce((sum, t) => sum + t.energy_amount_kwh, 0), 1)}{' '}
+                .reduce((sum, t) => {
+                  const num = Number(t.energy_amount_kwh);
+                  return sum + (Number.isFinite(num) ? num : 0);
+                }, 0), 1)}{' '}
               kWh
             </Text>
           </View>
@@ -546,8 +552,13 @@ export default function TransactionHistoryScreen() {
               ₹
               {safeToFixed(transactions
                 .reduce(
-                  (sum, t) =>
-                    sum + (activeTab === 'buyer' ? t.total_price : t.total_price - t.platform_fee),
+                  (sum, t) => {
+                    const price = Number(t.total_price);
+                    const fee = Number(t.platform_fee);
+                    const safePrice = Number.isFinite(price) ? price : 0;
+                    const safeFee = Number.isFinite(fee) ? fee : 0;
+                    return sum + (activeTab === 'buyer' ? safePrice : safePrice - safeFee);
+                  },
                   0
                 ), 2)}
             </Text>

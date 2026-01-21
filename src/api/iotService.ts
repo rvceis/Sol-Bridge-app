@@ -96,6 +96,13 @@ class IoTService {
   }
 
   /**
+   * Get latest reading for a specific device (real-time view)
+   */
+  async getDeviceLatest(deviceId: string): Promise<ApiResponse<any>> {
+    return api.get<any>(`${ENDPOINTS.iot.deviceLatest}/${deviceId}/latest`);
+  }
+
+  /**
    * Get historical energy data
    */
   async getHistory(params: HistoryParams): Promise<ApiResponse<HistoryResponse>> {
@@ -123,6 +130,35 @@ class IoTService {
     data: DeviceCommandRequest
   ): Promise<ApiResponse<DeviceCommandResponse>> {
     return api.post<DeviceCommandResponse>(ENDPOINTS.iot.deviceCommand, data);
+  }
+
+  /**
+   * Get device-specific latest reading (real-time)
+   */
+  async getDeviceLatest(deviceId: string): Promise<ApiResponse<any>> {
+    return api.get<any>(`${ENDPOINTS.iot.deviceLatest}/${deviceId}/latest`);
+  }
+
+  /**
+   * Get raw readings for analytics (all individual measurements, no aggregation)
+   */
+  async getRawReadings(
+    deviceId?: string,
+    startDate?: string,
+    endDate?: string,
+    limit: number = 1000
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('limit', limit.toString());
+
+    const queryString = queryParams.toString();
+    const url = deviceId
+      ? `/iot/device/${deviceId}/raw${queryString ? `?${queryString}` : ''}`
+      : `/iot/raw${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
   }
 
   /**
@@ -234,6 +270,45 @@ class IoTService {
       peakOutput: stats.peakOutput,
       peakOutputTime: stats.peakOutputTime,
     };
+  }
+
+  /**
+   * Get device-specific production data
+   */
+  async getDeviceProduction(
+    deviceId: string,
+    startDate?: string,
+    endDate?: string,
+    interval: 'hourly' | 'daily' | 'weekly' = 'hourly'
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('interval', interval);
+
+    const queryString = queryParams.toString();
+    const url = `/iot/production/device/${deviceId}${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
+  }
+
+  /**
+   * Get combined production data (all devices)
+   */
+  async getCombinedProduction(
+    startDate?: string,
+    endDate?: string,
+    interval: 'hourly' | 'daily' | 'weekly' = 'hourly'
+  ): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append('interval', interval);
+
+    const queryString = queryParams.toString();
+    const url = `/iot/production/combined${queryString ? `?${queryString}` : ''}`;
+
+    return api.get<any>(url);
   }
 
   /**

@@ -145,8 +145,12 @@ const EnergyScreen: React.FC = () => {
       setLoadingSources(true);
       const response = await marketplaceApi.getMyEnergySources();
       setEnergySources(response.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading energy sources:', error);
+      // Gracefully handle database errors - just set empty array
+      if (error?.statusCode === 500 || error?.error?.includes('does not exist')) {
+        setEnergySources([]);
+      }
     } finally {
       setLoadingSources(false);
     }

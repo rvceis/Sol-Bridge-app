@@ -354,11 +354,15 @@ export default function FindEnergySourcesScreen() {
   const loadSources = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await marketplaceApi.findEnergySources({
+      // Use AI matching to find best sellers for buyer
+      const response = await marketplaceApi.findSellerMatches({
+        requiredKwh: 10, // Default 10 kWh, can be dynamic
         maxPrice: parseFloat(filters.maxPrice) || 15,
-        maxDistance: parseFloat(filters.maxDistance) || 100,
-        renewableOnly: filters.renewableOnly,
-        limit: 30,
+        preferences: {
+          renewable: filters.renewableOnly,
+          minRating: 3.0,
+          maxDistance: parseFloat(filters.maxDistance) || 100,
+        },
       });
       setSources(response.data || []);
     } catch (error: any) {
@@ -468,6 +472,40 @@ export default function FindEnergySourcesScreen() {
             <Text style={styles.statLabel}>Type</Text>
           </View>
         </View>
+
+        {/* Match Breakdown Scores */}
+        {item.match_breakdown && (
+          <View style={{ backgroundColor: '#F5F5F5', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#333', marginBottom: 8 }}>Score Breakdown</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {item.match_breakdown.price > 0 && (
+                <View style={{ backgroundColor: '#FFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderLeftWidth: 3, borderLeftColor: '#4CAF50' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#333' }}>Price: {item.match_breakdown.price}%</Text>
+                </View>
+              )}
+              {item.match_breakdown.rating > 0 && (
+                <View style={{ backgroundColor: '#FFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderLeftWidth: 3, borderLeftColor: '#2196F3' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#333' }}>Rating: {item.match_breakdown.rating}%</Text>
+                </View>
+              )}
+              {item.match_breakdown.distance > 0 && (
+                <View style={{ backgroundColor: '#FFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderLeftWidth: 3, borderLeftColor: '#FF9800' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#333' }}>Distance: {item.match_breakdown.distance}%</Text>
+                </View>
+              )}
+              {item.match_breakdown.renewable > 0 && (
+                <View style={{ backgroundColor: '#FFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderLeftWidth: 3, borderLeftColor: '#4CAF50' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#333' }}>Renewable: {item.match_breakdown.renewable}%</Text>
+                </View>
+              )}
+              {item.match_breakdown.reliability > 0 && (
+                <View style={{ backgroundColor: '#FFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderLeftWidth: 3, borderLeftColor: '#9C27B0' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#333' }}>Reliability: {item.match_breakdown.reliability}%</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         <View style={styles.actionButtons}>
           <TouchableOpacity

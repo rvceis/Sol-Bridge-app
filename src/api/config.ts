@@ -26,8 +26,7 @@ const CURRENT_ENV = getEnvVar('EXPO_PUBLIC_ENV', 'development');
 const BACKEND_URLS = {
   // Development (local) - Using Render backend for consistency
   development: {
-    // base: 'https://sol-bridge.onrender.com',
-     base: 'http://localhost:3000',
+    base: 'http://localhost:3000',
     mlService: 'http://localhost:8001',
   },
   // Staging
@@ -38,7 +37,7 @@ const BACKEND_URLS = {
   // Production
   production: {
     base: 'https://sol-bridge.onrender.com',  // Using your deployed backend
-    mlService: 'https://ml.solarsharing.com',
+    mlService: 'https://th0r777-sol-bridge_ai.hf.space',  // HuggingFace Spaces ML service
   },
 };
 
@@ -118,6 +117,7 @@ export const ENDPOINTS = {
     latest: '/iot/readings/latest',
     history: '/iot/readings/history',
     deviceCommand: '/iot/device-command',
+    deviceLatest: '/iot/device',
     registerDevice: '/iot/devices',
   },
 

@@ -1,8 +1,7 @@
 {
   "expo": {
     "name": "Solar Sharing",
-    
-    "slug": "solar-sharing-platform",
+    "slug": "sol-bridge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,19 +38,19 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-       "bundler": "metro"
+      "bundler": "metro"
     },
     "plugins": [
       "expo-secure-store"
     ],
     "extra": {
       "eas": {
-        "projectId": "d0285e3f-bdb4-40e0-8624-712bc48dbdd3"
+        "projectId": "451e697a-3001-4bec-932e-8c30f417d1b9"
       },
       "EXPO_PUBLIC_ENV": "production",
       "EXPO_PUBLIC_API_URL": "httdps://sol-bridge.onrender.com",
-      "EXPO_PUBLIC_ML_URL": "https://solbridge-ai.onrender.com:8001"
-      
-    }
+      "EXPO_PUBLIC_ML_URL": "https://th0r777-sol-bridge_ai.hf.space"
+    },
+    "owner": "thor_yt"
   }
 }

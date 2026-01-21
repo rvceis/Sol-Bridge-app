@@ -153,6 +153,7 @@ export const ProfileNavigator: React.FC = () => {
           },
         })}
       />
+      {/* Removed DocumentsManagement screen: using DocumentsScreen only */}
       <Stack.Screen 
         name="Notifications" 
         component={NotificationsScreen}

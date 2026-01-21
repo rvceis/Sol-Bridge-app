@@ -9,6 +9,7 @@ export interface RazorpayOrderResponse {
   amount: number;
   currency: string;
   key_id: string;
+  testMode?: boolean;
 }
 
 export interface PaymentVerification {
@@ -30,10 +31,18 @@ export const paymentService = {
    * Create wallet top-up order
    */
   async createTopupOrder(amount: number): Promise<RazorpayOrderResponse> {
-    const response = await api.post<RazorpayOrderResponse>('/payment/topup/create-order', {
+    const response = await api.post<any>('/payment/topup/create-order', {
       amount,
     });
-    return response.data;
+    // Backend returns { success: true, data: {...}, message: "..." }
+    const orderData = response.data.data || response.data;
+    return {
+      orderId: orderData.order_id,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      key_id: orderData.key_id,
+      testMode: orderData.test_mode,
+    };
   },
 
   /**

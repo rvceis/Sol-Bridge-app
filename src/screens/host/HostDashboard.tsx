@@ -19,6 +19,8 @@ import { useNavigation } from '@react-navigation/native';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store';
 import { safeToFixed } from '../../utils/formatters';
+import { ProductionCard } from '../../components/cards/ProductionCard';
+import { TemperatureCard } from '../../components/cards/TemperatureCard';
 
 interface InstalledPanel {
   id: string;
@@ -168,6 +170,21 @@ export default function HostDashboard() {
               </Text>
             </View>
           </View>
+        </View>
+
+        {/* Combined Production Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Overall Production</Text>
+          </View>
+          <ProductionCard 
+            showCombined={true}
+            title="Total Production"
+            subtitle="All devices combined"
+          />          <TemperatureCard 
+            showCombined={true}
+            title="Average Temperature"
+          />          </View>
         </View>
 
         {/* Available Slots Section */}

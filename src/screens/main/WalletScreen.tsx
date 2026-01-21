@@ -81,19 +81,39 @@ const WalletScreen: React.FC = () => {
 
   const renderTransaction = ({ item }: { item: Transaction }) => {
     const isPositive = isCredit(item.type);
+    
+    // Handle both created_at and createdAt field names from backend
+    const dateStr = item.createdAt || (item as any).created_at;
+    let formattedDate = 'Unknown date';
+    
+    if (dateStr) {
+      try {
+        const date = new Date(dateStr);
+        if (!isNaN(date.getTime())) {
+          formattedDate = date.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+      } catch (error) {
+        console.error('Date parsing error:', error);
+      }
+    }
 
     return (
       <TouchableOpacity style={styles.transactionItem} activeOpacity={0.7}>
         <View
           style={[
             styles.transactionIcon,
-            { backgroundColor: isPositive ? colors.success.light : colors.error.light },
+            { backgroundColor: isPositive ? '#E8F5E9' : '#FFEBEE' },
           ]}
         >
           <Ionicons
             name={isPositive ? 'arrow-down' : 'arrow-up'}
             size={18}
-            color={isPositive ? colors.success.main : colors.error.main}
+            color={isPositive ? '#4CAF50' : '#F44336'}
           />
         </View>
 
@@ -102,12 +122,7 @@ const WalletScreen: React.FC = () => {
             {getTransactionTypeName(item.type)}
           </Text>
           <Text style={styles.transactionDate}>
-            {new Date(item.createdAt).toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {formattedDate}
           </Text>
         </View>
 
@@ -288,30 +303,8 @@ const WalletScreen: React.FC = () => {
     );
   };
 
-  // Use sample data if no transactions
-  const displayTransactions = transactions.length > 0 ? transactions : [
-    {
-      id: '1',
-      type: 'energy_sale',
-      amount: 125.50,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      type: 'topup',
-      amount: 500.00,
-      status: 'completed',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: '3',
-      type: 'energy_purchase',
-      amount: 75.25,
-      status: 'completed',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-    },
-  ] as Transaction[];
+  // Use real transactions only - no fake data
+  const displayTransactions = transactions;
 
   return (
     <View style={styles.container}>

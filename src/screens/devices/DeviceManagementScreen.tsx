@@ -11,11 +11,16 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  Clipboard,
+  ToastAndroid,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { marketplaceApi } from '../../api/marketplaceService';
+import { iotService } from '../../api';
 import { useAuthStore } from '../../store';
+import { TemperatureCard } from '../../components/cards/TemperatureCard';
 
 interface Device {
   device_id: string;
@@ -54,6 +59,9 @@ export default function DeviceManagementScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [saving, setSaving] = useState(false);
+  const [expandedDeviceId, setExpandedDeviceId] = useState<string | null>(null);
+  const [latestReadings, setLatestReadings] = useState<Record<string, any>>({});
+  const [latestLoading, setLatestLoading] = useState<Record<string, boolean>>({});
 
   // Form state
   const [deviceName, setDeviceName] = useState('');
@@ -84,6 +92,31 @@ export default function DeviceManagementScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     loadDevices();
+    if (expandedDeviceId) {
+      fetchLatestReading(expandedDeviceId);
+    }
+  };
+
+  const fetchLatestReading = async (deviceId: string) => {
+    setLatestLoading((prev) => ({ ...prev, [deviceId]: true }));
+    try {
+      const response = await iotService.getDeviceLatest(deviceId);
+      const data = response.data?.data || response.data;
+      setLatestReadings((prev) => ({ ...prev, [deviceId]: data }));
+    } catch (error) {
+      console.error('Error loading latest reading:', error);
+    } finally {
+      setLatestLoading((prev) => ({ ...prev, [deviceId]: false }));
+    }
+  };
+
+  const copyToClipboard = (text: string, label: string = 'Copied') => {
+    Clipboard.setString(text);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(`${label}: ${text}`, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Success', `${label} copied to clipboard`);
+    }
   };
 
   const resetForm = () => {
@@ -158,8 +191,32 @@ export default function DeviceManagementScreen() {
         Alert.alert('Success', 'Device updated successfully');
       } else {
         // Create new device
-        await marketplaceApi.createDevice(deviceData);
-        Alert.alert('Success', 'Device added successfully');
+        const response = await marketplaceApi.createDevice(deviceData);
+        const createdDevice = response?.data;
+        const deviceId = createdDevice?.device_id || 'Generated successfully';
+        Alert.alert(
+          'Success',
+          `Device added successfully!\n\nDevice ID: ${deviceId}`,
+          [
+            {
+              text: 'Copy ID',
+              onPress: () => {
+                // Copy to clipboard
+                require('react-native').Clipboard.setString(deviceId);
+                Alert.alert('Copied', 'Device ID copied to clipboard');
+              },
+            },
+            {
+              text: 'OK',
+              onPress: () => {
+                setModalVisible(false);
+                resetForm();
+                loadDevices();
+              },
+            },
+          ]
+        );
+        return;
       }
 
       setModalVisible(false);
@@ -206,47 +263,147 @@ export default function DeviceManagementScreen() {
     return deviceType?.label || type;
   };
 
-  const renderDeviceCard = ({ item }: { item: Device }) => (
-    <TouchableOpacity
-      style={styles.deviceCard}
-      onPress={() => openEditModal(item)}
-    >
-      <View style={styles.deviceIcon}>
-        <Ionicons
-          name={getDeviceIcon(item.device_type) as any}
-          size={32}
-          color="#4CAF50"
-        />
-      </View>
+  const renderDeviceCard = ({ item }: { item: Device }) => {
+    const isExpanded = expandedDeviceId === item.device_id;
+    
+    return (
+      <View style={styles.deviceCardContainer}>
+        <TouchableOpacity
+          style={styles.deviceCard}
+          onPress={() => {
+            if (isExpanded) {
+              setExpandedDeviceId(null);
+            } else {
+              setExpandedDeviceId(item.device_id);
+              fetchLatestReading(item.device_id);
+            }
+          }}
+        >
+          <View style={styles.deviceIcon}>
+            <Ionicons
+              name={getDeviceIcon(item.device_type) as any}
+              size={32}
+              color="#4CAF50"
+            />
+          </View>
 
-      <View style={styles.deviceInfo}>
-        <Text style={styles.deviceName}>{item.device_name}</Text>
-        <Text style={styles.deviceType}>{getDeviceLabel(item.device_type)}</Text>
-        
-        <View style={styles.deviceStats}>
-          {item.capacity_kwh && (
-            <View style={styles.statBadge}>
-              <Ionicons name="flash" size={12} color="#FF9800" />
-              <Text style={styles.statText}>{item.capacity_kwh} kWh</Text>
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName}>{item.device_name}</Text>
+            <Text style={styles.deviceType}>{getDeviceLabel(item.device_type)}</Text>
+            
+            <TouchableOpacity 
+              style={styles.deviceIdContainer}
+              onPress={(e) => {
+                e.stopPropagation();
+                copyToClipboard(item.device_id, 'Device ID');
+              }}
+            >
+              <Ionicons name="copy" size={11} color="#999" style={{ marginRight: 4 }} />
+              <Text style={styles.deviceId}>{item.device_id}</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.deviceStats}>
+              {item.capacity_kwh && (
+                <View style={styles.statBadge}>
+                  <Ionicons name="flash" size={12} color="#FF9800" />
+                  <Text style={styles.statText}>{item.capacity_kwh} kWh</Text>
+                </View>
+              )}
+              {item.efficiency_rating && (
+                <View style={styles.statBadge}>
+                  <Ionicons name="speedometer" size={12} color="#2196F3" />
+                  <Text style={styles.statText}>{item.efficiency_rating}%</Text>
+                </View>
+              )}
             </View>
-          )}
-          {item.efficiency_rating && (
-            <View style={styles.statBadge}>
-              <Ionicons name="speedometer" size={12} color="#2196F3" />
-              <Text style={styles.statText}>{item.efficiency_rating}%</Text>
-            </View>
-          )}
-        </View>
-      </View>
+          </View>
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDelete(item)}
-      >
-        <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
+          <View style={styles.deviceActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                openEditModal(item);
+              }}
+            >
+              <Ionicons name="pencil" size={18} color="#2196F3" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDelete(item);
+              }}
+            >
+              <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+            </TouchableOpacity>
+          </View>
+
+          <Ionicons 
+            name={isExpanded ? "chevron-up" : "chevron-down"} 
+            size={20} 
+            color="#999" 
+          />
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={styles.productionContainer}>
+            <View style={styles.realtimeCard}>
+              <View style={styles.realtimeHeader}>
+                <Text style={styles.realtimeTitle}>Realtime</Text>
+                {latestLoading[item.device_id] && (
+                  <ActivityIndicator size="small" color="#007AFF" />
+                )}
+              </View>
+              {latestReadings[item.device_id]?.reading ? (
+                <View style={styles.realtimeGrid}>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Voltage</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.voltage || 0).toFixed(2)} V
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Current</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.current || 0).toFixed(2)} A
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Power</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.power_w || 0).toFixed(2)} W
+                    </Text>
+                  </View>
+                  <View style={styles.realtimeItem}>
+                    <Text style={styles.realtimeLabel}>Energy</Text>
+                    <Text style={styles.realtimeValue}>
+                      {(latestReadings[item.device_id].reading.energy_wh || 0).toFixed(2)} Wh
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyStateCompact}>
+                  {latestLoading[item.device_id] ? (
+                    <ActivityIndicator size="small" color="#007AFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="flash" size={20} color="#CCC" />
+                      <Text style={styles.emptyText}>No realtime data yet</Text>
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
+            <TemperatureCard 
+              deviceId={item.device_id}
+              title="Device Temperature"
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -498,18 +655,92 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
+  deviceCardContainer: {
+    marginBottom: 12,
+  },
   deviceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  deviceActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginRight: 8,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productionContainer: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+    gap: 12,
+  },
+  realtimeCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  realtimeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  realtimeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+  realtimeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  realtimeItem: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 10,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
+  },
+  realtimeLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  realtimeValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  emptyStateCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 8,
   },
   deviceIcon: {
     width: 56,
@@ -534,6 +765,23 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
+  deviceIdContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  deviceId: {
+    fontSize: 11,
+    color: '#999',
+    fontFamily: 'Courier New',
+    flex: 1,
+  },
   deviceStats: {
     flexDirection: 'row',
     gap: 8,
@@ -551,9 +799,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#666',
     fontWeight: '500',
-  },
-  deleteButton: {
-    padding: 8,
   },
   emptyState: {
     flex: 1,
