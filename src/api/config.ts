@@ -37,7 +37,7 @@ const BACKEND_URLS = {
   // Production
   production: {
     base: 'https://sol-bridge.onrender.com',  // Using your deployed backend
-    mlService: 'https://solbridge-ai.onrender.com',
+    mlService: 'https://th0r777-sol-bridge_ai.hf.space',  // HuggingFace Spaces ML service
   },
 };
 
